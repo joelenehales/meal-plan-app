@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MealPlanner());
 }
 
@@ -73,6 +74,37 @@ class _HomePageState extends State<HomePage> {
               controller: textController,
             ),
             Text(recipeList),
+
+            // Displays all recipes
+            FutureBuilder<List<Recipe>>(
+                future: DatabaseHelper.instance.getRecipeList(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<Recipe>> snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: Text('Loading...'));
+                  }
+                  return snapshot.data!
+                          .isEmpty // Check if there are groceries to display
+                      ? Center(child: Text('No Recipes to Display'))
+                      : ListView(
+                          shrinkWrap: true,
+                          children: snapshot.data!.map((recipe) {
+                            return Center(
+                              child: ListTile(
+                                  // Each recipe
+                                  title: Text(recipe.name),
+                                  onLongPress: () {
+                                    // Remove recipe when pressed and held
+                                    // TODO: Change this eventually to be different
+                                    setState(() {
+                                      DatabaseHelper.instance
+                                          .remove(recipe.id!);
+                                    });
+                                  }),
+                            );
+                          }).toList(),
+                        );
+                }),
             //Text(
             //  '$_counter',
             //  style: Theme.of(context).textTheme.headlineMedium,
@@ -88,10 +120,16 @@ class _HomePageState extends State<HomePage> {
       //  child: const Icon(Icons.add),
       //), // This trailing comma makes auto-formatting nicer for build methods.
 
-      // Button to print entered text to console
+      // Button to add recipe to the database
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          addRecipe(textController.text);
+        onPressed: () async {
+          await DatabaseHelper.instance.add(
+            // Adds recipe with the given name
+            Recipe(name: textController.text),
+          );
+          setState(() {
+            textController.clear(); // Reset the entered text
+          });
         },
         tooltip: 'Add Recipe',
         child: const Icon(Icons.add),
@@ -100,6 +138,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// Represents a single recipe
 class Recipe {
   final int? id; // ? means can be null
   final String name;
@@ -146,5 +185,36 @@ class DatabaseHelper {
       name TEXT
     )
     ''');
+  }
+
+  // Queries the database for all recipes and returns in a list
+  Future<List<Recipe>> getRecipeList() async {
+    Database db = await instance.database;
+    var recipes = await db.query('recipes', orderBy: 'name');
+    List<Recipe> recipeList = recipes.isNotEmpty
+        ? recipes.map((c) => Recipe.fromMap(c)).toList()
+        : [];
+    return recipeList;
+  }
+
+  // Adds recipe to list
+  // TODO: Just name for now. Also allow it to add ingredients
+  Future<int> add(Recipe recipe) async {
+    Database db = await instance.database;
+    return await db.insert('recipes', recipe.toMap());
+  }
+
+  // Removes recipe from list
+  Future<int> remove(int id) async {
+    Database db = await instance.database;
+    return await db.delete('recipes', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Update a recipe
+  // TODO: Add a way to update recipe name
+  Future<int> rename(Recipe recipe) async {
+    Database db = await instance.database;
+    return await db.update('recipes', recipe.toMap(),
+        where: 'id = ?', whereArgs: [recipe.id]);
   }
 }
