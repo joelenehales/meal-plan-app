@@ -38,6 +38,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int? selectedRecipe;
   final textController = TextEditingController();
   String recipeList = "";
 
@@ -90,50 +91,56 @@ class _HomePageState extends State<HomePage> {
                           shrinkWrap: true,
                           children: snapshot.data!.map((recipe) {
                             return Center(
-                              child: ListTile(
-                                  // Each recipe
-                                  title: Text(recipe.name),
-                                  onLongPress: () {
-                                    // Remove recipe when pressed and held
-                                    // TODO: Change this eventually to be different
-                                    setState(() {
-                                      DatabaseHelper.instance
-                                          .remove(recipe.id!);
-                                    });
-                                  }),
+                              child: Card(
+                                // Add gray colour to selected recipe
+                                color: selectedRecipe == recipe.id
+                                    ? Colors.white70
+                                    : Colors.white,
+                                child: ListTile(
+                                    // Each recipe
+                                    title: Text(recipe.name),
+                                    onTap: () {
+                                      setState(() {
+                                        textController.text = recipe.name;
+                                        selectedRecipe = recipe.id;
+                                      });
+                                    },
+                                    onLongPress: () {
+                                      // Remove recipe when pressed and held
+                                      setState(() {
+                                        DatabaseHelper.instance
+                                            .remove(recipe.id!);
+                                      });
+                                    }),
+                              ),
                             );
                           }).toList(),
                         );
                 }),
-            //Text(
-            //  '$_counter',
-            //  style: Theme.of(context).textTheme.headlineMedium,
-            //),
           ],
         ),
       ),
 
-      // Button to increment counter
-      //floatingActionButton: FloatingActionButton(
-      //  onPressed: _incrementCounter,
-      //  tooltip: 'Increment',
-      //  child: const Icon(Icons.add),
-      //), // This trailing comma makes auto-formatting nicer for build methods.
-
       // Button to add recipe to the database
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await DatabaseHelper.instance.add(
-            // Adds recipe with the given name
-            Recipe(name: textController.text),
-          );
+          // If recipe is selected, rename it
+          // Otherwise, add new recipe
+          selectedRecipe != null
+              ? await DatabaseHelper.instance.rename(
+                  Recipe(id: selectedRecipe, name: textController.text),
+                )
+              : await DatabaseHelper.instance.add(
+                  // Adds recipe with the given name
+                  Recipe(name: textController.text),
+                );
           setState(() {
             textController.clear(); // Reset the entered text
           });
         },
         tooltip: 'Add Recipe',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
@@ -211,7 +218,7 @@ class DatabaseHelper {
   }
 
   // Update a recipe
-  // TODO: Add a way to update recipe name
+  // TODO: Add a way to update recipe ingredients
   Future<int> rename(Recipe recipe) async {
     Database db = await instance.database;
     return await db.update('recipes', recipe.toMap(),
