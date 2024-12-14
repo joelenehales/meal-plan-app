@@ -61,21 +61,8 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            //const Text(
-            //  'You have pushed the button this many times:',
-            //),
-            //Text(
-            //  '$_counter',
-            //  style: Theme.of(context).textTheme.headlineMedium,
-            //),
-            const Text(
-              'Enter Recipe Name',
-            ),
-            TextField(
-              controller: textController,
-            ),
-            Text(recipeList),
-
+            const Text('Enter Recipe Name'),
+            TextField(controller: textController),
             // Displays all recipes
             FutureBuilder<List<Recipe>>(
                 future: DatabaseHelper.instance.getRecipeList(),
@@ -96,8 +83,8 @@ class _HomePageState extends State<HomePage> {
                                 color: selectedRecipe == recipe.id
                                     ? Colors.white70
                                     : Colors.white,
+                                // Each recipe
                                 child: ListTile(
-                                    // Each recipe
                                     title: Text(recipe.name),
                                     onTap: () {
                                       setState(() {
@@ -106,10 +93,9 @@ class _HomePageState extends State<HomePage> {
                                       });
                                     },
                                     onLongPress: () {
-                                      // Remove recipe when pressed and held
+                                      // Press and hold to clear selected recipe
                                       setState(() {
-                                        DatabaseHelper.instance
-                                            .remove(recipe.id!);
+                                        selectedRecipe = null;
                                       });
                                     }),
                               ),
@@ -121,25 +107,46 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      // Button to add recipe to the database
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // If recipe is selected, rename it
-          // Otherwise, add new recipe
-          selectedRecipe != null
-              ? await DatabaseHelper.instance.rename(
-                  Recipe(id: selectedRecipe, name: textController.text),
-                )
-              : await DatabaseHelper.instance.add(
-                  // Adds recipe with the given name
-                  Recipe(name: textController.text),
-                );
-          setState(() {
-            textController.clear(); // Reset the entered text
-          });
-        },
-        tooltip: 'Add Recipe',
-        child: const Icon(Icons.add),
+      floatingActionButton: SingleChildScrollView(
+        child: Row(
+          children: [
+            FloatingActionButton(
+                tooltip: 'Add Recipe',
+                child: const Icon(Icons.add_outlined),
+                onPressed: () async {
+                  // Add recipe with the entered name
+                  setState(() {
+                    DatabaseHelper.instance
+                        .add(Recipe(name: textController.text));
+                  });
+                }),
+            FloatingActionButton(
+              tooltip: 'Rename Selected Recipe',
+              child: const Icon(Icons.edit_outlined),
+              onPressed: () async {
+                // If recipe is selected, rename it to the entered text
+                if (selectedRecipe != null) {
+                  setState(() {
+                    DatabaseHelper.instance.rename(
+                        Recipe(id: selectedRecipe, name: textController.text));
+                  });
+                }
+              },
+            ),
+            FloatingActionButton(
+              tooltip: 'Delete Selected Recipe',
+              child: const Icon(Icons.delete_outlined),
+              onPressed: () async {
+                // If recipe is selected, remove it
+                if (selectedRecipe != null) {
+                  setState(() {
+                    DatabaseHelper.instance.remove(selectedRecipe!);
+                  });
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -176,7 +183,9 @@ class DatabaseHelper {
   // Opens database
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'recipes.db');
+    print(documentsDirectory);
+    String path = join(documentsDirectory.path,
+        'appDatabase.db'); // FIXME: Make a better name for this
     return await openDatabase(
       path,
       version: 1,
@@ -190,9 +199,22 @@ class DatabaseHelper {
     CREATE TABLE recipes(
       id INTEGER PRIMARY KEY,
       name TEXT
-    )
+    );
+    CREATE TABLE ingredients(
+      id INTEGER PRIMARY KEY,
+      name TEXT
+    );
+    CREATE TABLE recipeIngredients(
+      recipe_id INTEGER,
+      ingredient_id INTEGER,
+      FOREIGN KEY(recipe_id) REFERENCES recipes(id),
+      FOREIGN KEY(ingredient_id) REFERENCES ingredients(id)
+    );
+    INSERT INTO ingredients VALUES ("Test");
     ''');
   }
+
+  // TODO: Make default list of ingredients on create
 
   // Queries the database for all recipes and returns in a list
   Future<List<Recipe>> getRecipeList() async {
@@ -202,6 +224,16 @@ class DatabaseHelper {
         ? recipes.map((c) => Recipe.fromMap(c)).toList()
         : [];
     return recipeList;
+  }
+
+  // Queries the database for all recipes and returns in a list
+  Future<List<Recipe>> allIngredients() async {
+    Database db = await instance.database;
+    var ingredients = await db.query('ingredients', orderBy: 'name');
+    List<Recipe> allIngredients = ingredients.isNotEmpty
+        ? ingredients.map((c) => Recipe.fromMap(c)).toList()
+        : [];
+    return allIngredients;
   }
 
   // Adds recipe to list
