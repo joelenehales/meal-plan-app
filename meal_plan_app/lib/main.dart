@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
@@ -17,7 +18,7 @@ class MealPlanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const HomePage(title: 'Meal Planner'),
+      home: const RecipeListPage(title: 'Meal Planner'),
       title: 'Meal Planner',
       theme: ThemeData(
         colorScheme:
@@ -28,24 +29,23 @@ class MealPlanner extends StatelessWidget {
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.title});
+class RecipeListPage extends StatefulWidget {
+  const RecipeListPage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<RecipeListPage> createState() => _RecipeListPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _RecipeListPageState extends State<RecipeListPage> {
   int? selectedRecipe;
   final textController = TextEditingController();
-  String recipeList = "";
 
-  void addRecipe(String recipe) {
-    setState(() {
-      recipeList = recipeList + recipe;
-    });
+  // Reload recipe list by refreshing the state
+  // Used when returning home after adding a new recipe, so the new recipe shows up
+  FutureOr refresh(dynamic value) {
+    setState(() {});
   }
 
   @override
@@ -61,7 +61,8 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('Enter Recipe Name'),
+            const Text(
+                'Enter Recipe Name'), // TODO: Make this into a search bar
             TextField(controller: textController),
             // Displays all recipes
             FutureBuilder<List<Recipe>>(
@@ -109,16 +110,17 @@ class _HomePageState extends State<HomePage> {
 
       floatingActionButton: SingleChildScrollView(
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FloatingActionButton(
-                tooltip: 'Add Recipe',
+                tooltip: 'New Recipe',
                 child: const Icon(Icons.add_outlined),
                 onPressed: () async {
-                  // Add recipe with the entered name
-                  setState(() {
-                    DatabaseHelper.instance
-                        .add(Recipe(name: textController.text));
-                  });
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const NewRecipePage()),
+                  ).then(refresh);
                 }),
             FloatingActionButton(
               tooltip: 'Rename Selected Recipe',
@@ -152,6 +154,110 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+//////////////////////////
+
+class NewRecipePage extends StatefulWidget {
+  const NewRecipePage({super.key});
+
+  @override
+  State<NewRecipePage> createState() => _NewRecipePageState();
+}
+
+class _NewRecipePageState extends State<NewRecipePage> {
+  bool isChecked = false;
+  List<int> selectedIngredients = [];
+  final textController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // The top bar of the app
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Add New Recipe'),
+      ),
+
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            const Text('Enter Recipe Name'),
+            TextField(controller: textController),
+            // Displays ingredients to select from
+            FutureBuilder<List<Ingredient>>(
+                future: DatabaseHelper.instance.allIngredients(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<Ingredient>> snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: Text('Loading...'));
+                  }
+                  return snapshot
+                          .data!.isEmpty // Check if there are ingredients
+                      ? Center(
+                          child: Text(
+                              'No Ingredients')) // TODO: This should never happen
+                      : ListView(
+                          shrinkWrap: true,
+                          children: snapshot.data!.map((ingredient) {
+                            return Row(
+                              children: [
+                                Checkbox(
+                                  onChanged: (bool? value) {
+                                    if (isChecked) {
+                                      setState(() {
+                                        selectedIngredients.add(ingredient.id!);
+                                      });
+                                    } else {
+                                      setState(() {
+                                        selectedIngredients
+                                            .remove(ingredient.id!);
+                                      });
+                                    }
+                                    // TODO: Can likely be improved
+                                  },
+                                  value: isChecked,
+                                ),
+                                Text(ingredient.name)
+                              ],
+                            );
+                          }).toList(),
+                        );
+                }),
+          ],
+        ),
+      ),
+
+      floatingActionButton: SingleChildScrollView(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            FloatingActionButton(
+                tooltip: 'Save',
+                child: const Icon(Icons.add_outlined),
+                onPressed: () async {
+                  // Add recipe with the entered name and ingredients
+                  setState(() {
+                    DatabaseHelper.instance
+                        .add(Recipe(name: textController.text));
+                    // TODO: In recipeIngredients table, add all ingredients
+                  });
+                  Navigator.pop(context); // Return to main menu
+                }),
+            FloatingActionButton(
+                tooltip: 'Cancel',
+                child: const Icon(Icons.cancel_outlined),
+                onPressed: () async {
+                  Navigator.pop(context); // Return to main menu
+                }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+///////////////////////
+
 // Represents a single recipe
 class Recipe {
   final int? id; // ? means can be null
@@ -160,6 +266,28 @@ class Recipe {
   Recipe({this.id, required this.name});
 
   factory Recipe.fromMap(Map<String, dynamic> json) => Recipe(
+        id: json['id'],
+        name: json['name'],
+      );
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+    };
+  }
+}
+
+// Represents a single ingredient
+class Ingredient {
+  final int? id; // ? means can be null
+  final String name;
+  // TODO: Add type
+  // TODO: Add icon
+
+  Ingredient({this.id, required this.name});
+
+  factory Ingredient.fromMap(Map<String, dynamic> json) => Ingredient(
         id: json['id'],
         name: json['name'],
       );
@@ -210,11 +338,8 @@ class DatabaseHelper {
       FOREIGN KEY(recipe_id) REFERENCES recipes(id),
       FOREIGN KEY(ingredient_id) REFERENCES ingredients(id)
     );
-    INSERT INTO ingredients VALUES ("Test");
     ''');
   }
-
-  // TODO: Make default list of ingredients on create
 
   // Queries the database for all recipes and returns in a list
   Future<List<Recipe>> getRecipeList() async {
@@ -226,12 +351,29 @@ class DatabaseHelper {
     return recipeList;
   }
 
-  // Queries the database for all recipes and returns in a list
-  Future<List<Recipe>> allIngredients() async {
+  // Queries the database for the ingredients in a recipe
+  Future<List<Ingredient>> getRecipeIngredients(int id) async {
+    Database db = await instance.database;
+    var ingredientQuery = await db.rawQuery('''
+      SELECT * FROM ingredients 
+      WHERE ingredients.id IN (
+        SELECT ingredientId 
+        FROM recipeIngredients 
+        WHERE recipeId = ?
+      )
+      ''', [id]);
+    List<Ingredient> ingredientList = ingredientQuery.isNotEmpty
+        ? ingredientQuery.map((c) => Ingredient.fromMap(c)).toList()
+        : [];
+    return ingredientList;
+  }
+
+  // Queries the database for all ingredients and returns in a list
+  Future<List<Ingredient>> allIngredients() async {
     Database db = await instance.database;
     var ingredients = await db.query('ingredients', orderBy: 'name');
-    List<Recipe> allIngredients = ingredients.isNotEmpty
-        ? ingredients.map((c) => Recipe.fromMap(c)).toList()
+    List<Ingredient> allIngredients = ingredients.isNotEmpty
+        ? ingredients.map((c) => Ingredient.fromMap(c)).toList()
         : [];
     return allIngredients;
   }
@@ -247,6 +389,7 @@ class DatabaseHelper {
   Future<int> remove(int id) async {
     Database db = await instance.database;
     return await db.delete('recipes', where: 'id = ?', whereArgs: [id]);
+    // TODO: Remove from recipeIngredients
   }
 
   // Update a recipe
