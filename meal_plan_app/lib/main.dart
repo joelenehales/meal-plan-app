@@ -73,7 +73,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                     return Center(child: Text('Loading...'));
                   }
                   return snapshot.data!
-                          .isEmpty // Check if there are groceries to display
+                          .isEmpty // Check if there are recipes to display
                       ? Center(child: Text('No Recipes to Display'))
                       : ListView(
                           shrinkWrap: true,
@@ -143,6 +143,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                 if (selectedRecipe != null) {
                   setState(() {
                     DatabaseHelper.instance.remove(selectedRecipe!);
+                    textController.text = "";
                   });
                 }
               },
@@ -177,51 +178,29 @@ class _NewRecipePageState extends State<NewRecipePage> {
         title: const Text('Add New Recipe'),
       ),
 
+      // TODO: Test things are working by displaying all recipes
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text('Enter Recipe Name'),
             TextField(controller: textController),
-            // Displays ingredients to select from
             FutureBuilder<List<Ingredient>>(
-                future: DatabaseHelper.instance.allIngredients(),
+                future: DatabaseHelper.instance.getIngredients(),
                 builder: (BuildContext context,
                     AsyncSnapshot<List<Ingredient>> snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(child: Text('Loading...'));
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(child: Text('No Ingredients to Display'));
                   }
-                  return snapshot
-                          .data!.isEmpty // Check if there are ingredients
-                      ? Center(
-                          child: Text(
-                              'No Ingredients')) // TODO: This should never happen
-                      : ListView(
-                          shrinkWrap: true,
-                          children: snapshot.data!.map((ingredient) {
-                            return Row(
-                              children: [
-                                Checkbox(
-                                  onChanged: (bool? value) {
-                                    if (isChecked) {
-                                      setState(() {
-                                        selectedIngredients.add(ingredient.id!);
-                                      });
-                                    } else {
-                                      setState(() {
-                                        selectedIngredients
-                                            .remove(ingredient.id!);
-                                      });
-                                    }
-                                    // TODO: Can likely be improved
-                                  },
-                                  value: isChecked,
-                                ),
-                                Text(ingredient.name)
-                              ],
-                            );
-                          }).toList(),
-                        );
+                  return ListView(
+                    shrinkWrap: true,
+                    children: snapshot.data!.map((ingredient) {
+                      return Card(
+                        // Each ingredient
+                        child: Text(ingredient.name),
+                      );
+                    }).toList(),
+                  );
                 }),
           ],
         ),
@@ -241,12 +220,6 @@ class _NewRecipePageState extends State<NewRecipePage> {
                         .add(Recipe(name: textController.text));
                     // TODO: In recipeIngredients table, add all ingredients
                   });
-                  Navigator.pop(context); // Return to main menu
-                }),
-            FloatingActionButton(
-                tooltip: 'Cancel',
-                child: const Icon(Icons.cancel_outlined),
-                onPressed: () async {
                   Navigator.pop(context); // Return to main menu
                 }),
           ],
@@ -324,21 +297,38 @@ class DatabaseHelper {
   // Run when opening a database that does not yet exist. Creates all needed tables
   Future _onCreate(Database db, int version) async {
     await db.execute('''
-    CREATE TABLE recipes(
-      id INTEGER PRIMARY KEY,
-      name TEXT
-    );
-    CREATE TABLE ingredients(
-      id INTEGER PRIMARY KEY,
-      name TEXT
-    );
-    CREATE TABLE recipeIngredients(
-      recipe_id INTEGER,
-      ingredient_id INTEGER,
-      FOREIGN KEY(recipe_id) REFERENCES recipes(id),
-      FOREIGN KEY(ingredient_id) REFERENCES ingredients(id)
-    );
+      CREATE TABLE ingredients(
+        id INTEGER PRIMARY KEY,
+        name TEXT
+      );
     ''');
+
+    await db.execute('''
+      CREATE TABLE recipes(
+        id INTEGER PRIMARY KEY,
+        name TEXT
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE recipeIngredients(
+        recipe_id INTEGER,
+        ingredient_id INTEGER,
+        FOREIGN KEY(recipe_id) REFERENCES recipes(id),
+        FOREIGN KEY(ingredient_id) REFERENCES ingredients(id)
+      );
+    ''');
+
+    List<Ingredient> defaultIngredients = [
+      Ingredient(name: 'Tomato'),
+      Ingredient(name: 'Lettuce'),
+      Ingredient(name: 'Bread')
+    ];
+
+    for (var ingredient in defaultIngredients) {
+      await db.insert('ingredients', ingredient.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    }
   }
 
   // Queries the database for all recipes and returns in a list
@@ -349,6 +339,15 @@ class DatabaseHelper {
         ? recipes.map((c) => Recipe.fromMap(c)).toList()
         : [];
     return recipeList;
+  }
+
+  Future<List<Ingredient>> getIngredients() async {
+    Database db = await instance.database;
+    var ingredientsQuery = await db.query('ingredients', orderBy: 'name');
+    List<Ingredient> ingredients = ingredientsQuery.isNotEmpty
+        ? ingredientsQuery.map((c) => Ingredient.fromMap(c)).toList()
+        : [];
+    return ingredients;
   }
 
   // Queries the database for the ingredients in a recipe
@@ -376,6 +375,13 @@ class DatabaseHelper {
         ? ingredients.map((c) => Ingredient.fromMap(c)).toList()
         : [];
     return allIngredients;
+  }
+
+  // Adds ingredient
+  Future<int> addIngredient(Ingredient ingredient) async {
+    Database db = await instance.database;
+    return await db.insert('ingredients', ingredient.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // Adds recipe to list
