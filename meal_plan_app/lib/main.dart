@@ -129,7 +129,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                 // If recipe is selected, rename it to the entered text
                 if (selectedRecipe != null) {
                   setState(() {
-                    DatabaseHelper.instance.rename(
+                    DatabaseHelper.instance.renameRecipe(
                         Recipe(id: selectedRecipe, name: textController.text));
                   });
                 }
@@ -142,7 +142,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                 // If recipe is selected, remove it
                 if (selectedRecipe != null) {
                   setState(() {
-                    DatabaseHelper.instance.remove(selectedRecipe!);
+                    DatabaseHelper.instance.removeRecipe(selectedRecipe!);
                     textController.text = "";
                   });
                 }
@@ -166,7 +166,7 @@ class NewRecipePage extends StatefulWidget {
 
 class _NewRecipePageState extends State<NewRecipePage> {
   bool isChecked = false;
-  List<int> selectedIngredients = [];
+  List<int> selectedIngredientIds = [];
   final textController = TextEditingController();
 
   @override
@@ -195,9 +195,19 @@ class _NewRecipePageState extends State<NewRecipePage> {
                   return ListView(
                     shrinkWrap: true,
                     children: snapshot.data!.map((ingredient) {
-                      return Card(
-                        // Each ingredient
-                        child: Text(ingredient.name),
+                      // Display each ingredient with a checkbox
+                      return CheckboxListTile(
+                        title: Text(ingredient.name),
+                        value: selectedIngredientIds.contains(ingredient.id),
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value!) {
+                              selectedIngredientIds.add(ingredient.id!);
+                            } else {
+                              selectedIngredientIds.remove(ingredient.id);
+                            }
+                          });
+                        },
                       );
                     }).toList(),
                   );
@@ -216,9 +226,9 @@ class _NewRecipePageState extends State<NewRecipePage> {
                 onPressed: () async {
                   // Add recipe with the entered name and ingredients
                   setState(() {
-                    DatabaseHelper.instance
-                        .add(Recipe(name: textController.text));
-                    // TODO: In recipeIngredients table, add all ingredients
+                    DatabaseHelper.instance.addRecipe(
+                        Recipe(name: textController.text),
+                        selectedIngredientIds);
                   });
                   Navigator.pop(context); // Return to main menu
                 }),
@@ -235,6 +245,7 @@ class _NewRecipePageState extends State<NewRecipePage> {
 class Recipe {
   final int? id; // ? means can be null
   final String name;
+  // TODO: Add type of cuisine
 
   Recipe({this.id, required this.name});
 
@@ -384,23 +395,26 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // Adds recipe to list
-  // TODO: Just name for now. Also allow it to add ingredients
-  Future<int> add(Recipe recipe) async {
+  // Adds recipe and its ingredients to databae
+  Future<void> addRecipe(Recipe recipe, List<int> ingredientIds) async {
     Database db = await instance.database;
-    return await db.insert('recipes', recipe.toMap());
+    await db.insert('recipes', recipe.toMap());
+    for (var ingredientId in ingredientIds) {
+      await db.insert('recipeIngredients',
+          {'recipeId': recipe.id, 'ingredientId': ingredientId});
+    }
   }
 
   // Removes recipe from list
-  Future<int> remove(int id) async {
+  Future<void> removeRecipe(int id) async {
     Database db = await instance.database;
-    return await db.delete('recipes', where: 'id = ?', whereArgs: [id]);
-    // TODO: Remove from recipeIngredients
+    await db.delete('recipes', where: 'id = ?', whereArgs: [id]);
+    await db.delete('recipeIngredients', where: 'id = ?', whereArgs: [id]);
   }
 
   // Update a recipe
   // TODO: Add a way to update recipe ingredients
-  Future<int> rename(Recipe recipe) async {
+  Future<int> renameRecipe(Recipe recipe) async {
     Database db = await instance.database;
     return await db.update('recipes', recipe.toMap(),
         where: 'id = ?', whereArgs: [recipe.id]);
