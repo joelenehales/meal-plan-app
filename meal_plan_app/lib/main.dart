@@ -87,7 +87,37 @@ class _RecipeListPageState extends State<RecipeListPage> {
                                 // Each recipe
                                 child: ListTile(
                                     title: Text(recipe.name),
+                                    // List the recipe's ingredients
+                                    subtitle: Column(
+                                      children: <Widget>[
+                                        FutureBuilder<List<Ingredient>>(
+                                            future: DatabaseHelper.instance
+                                                .getRecipeIngredients(
+                                                    recipe.id),
+                                            builder: (BuildContext context,
+                                                AsyncSnapshot<List<Ingredient>>
+                                                    snapshot) {
+                                              if (!snapshot.hasData ||
+                                                  snapshot.data!.isEmpty) {
+                                                return Center(
+                                                    child:
+                                                        Text('No Ingredients'));
+                                              }
+                                              return ListView(
+                                                shrinkWrap: true,
+                                                children: snapshot.data!
+                                                    .map((ingredient) {
+                                                  return Center(
+                                                      child: ListTile(
+                                                          title: Text(ingredient
+                                                              .name)));
+                                                }).toList(),
+                                              );
+                                            }),
+                                      ],
+                                    ),
                                     onTap: () {
+                                      // Tap to select recipe to edit or remove
                                       setState(() {
                                         textController.text = recipe.name;
                                         selectedRecipe = recipe.id;
@@ -130,7 +160,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
                 if (selectedRecipe != null) {
                   setState(() {
                     DatabaseHelper.instance.renameRecipe(
-                        Recipe(id: selectedRecipe, name: textController.text));
+                        Recipe(id: selectedRecipe!, name: textController.text));
                   });
                 }
               },
@@ -178,7 +208,6 @@ class _NewRecipePageState extends State<NewRecipePage> {
         title: const Text('Add New Recipe'),
       ),
 
-      // TODO: Test things are working by displaying all recipes
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -202,7 +231,7 @@ class _NewRecipePageState extends State<NewRecipePage> {
                         onChanged: (bool? value) {
                           setState(() {
                             if (value!) {
-                              selectedIngredientIds.add(ingredient.id!);
+                              selectedIngredientIds.add(ingredient.id);
                             } else {
                               selectedIngredientIds.remove(ingredient.id);
                             }
@@ -225,10 +254,13 @@ class _NewRecipePageState extends State<NewRecipePage> {
                 child: const Icon(Icons.add_outlined),
                 onPressed: () async {
                   // Add recipe with the entered name and ingredients
+                  int nextRecipeId =
+                      await DatabaseHelper.instance.getNextAvailableRecipeId();
                   setState(() {
                     DatabaseHelper.instance.addRecipe(
-                        Recipe(name: textController.text),
+                        Recipe(id: nextRecipeId, name: textController.text),
                         selectedIngredientIds);
+                    // TODO: Give an error if no ingredients are selected
                   });
                   Navigator.pop(context); // Return to main menu
                 }),
@@ -243,11 +275,12 @@ class _NewRecipePageState extends State<NewRecipePage> {
 
 // Represents a single recipe
 class Recipe {
-  final int? id; // ? means can be null
+  final int id;
   final String name;
+  // TODO: Add icon
   // TODO: Add type of cuisine
 
-  Recipe({this.id, required this.name});
+  Recipe({required this.id, required this.name});
 
   factory Recipe.fromMap(Map<String, dynamic> json) => Recipe(
         id: json['id'],
@@ -264,12 +297,12 @@ class Recipe {
 
 // Represents a single ingredient
 class Ingredient {
-  final int? id; // ? means can be null
+  final int id;
   final String name;
   // TODO: Add type
   // TODO: Add icon
 
-  Ingredient({this.id, required this.name});
+  Ingredient({required this.id, required this.name});
 
   factory Ingredient.fromMap(Map<String, dynamic> json) => Ingredient(
         id: json['id'],
@@ -295,7 +328,6 @@ class DatabaseHelper {
   // Opens database
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    print(documentsDirectory);
     String path = join(documentsDirectory.path,
         'appDatabase.db'); // FIXME: Make a better name for this
     return await openDatabase(
@@ -323,17 +355,18 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE TABLE recipeIngredients(
-        recipe_id INTEGER,
-        ingredient_id INTEGER,
+        recipe_id INTEGER NOT NULL,
+        ingredient_id INTEGER NOT NULL,
         FOREIGN KEY(recipe_id) REFERENCES recipes(id),
-        FOREIGN KEY(ingredient_id) REFERENCES ingredients(id)
+        FOREIGN KEY(ingredient_id) REFERENCES ingredients(id),
+        PRIMARY KEY (recipe_id, ingredient_id)
       );
     ''');
 
     List<Ingredient> defaultIngredients = [
-      Ingredient(name: 'Tomato'),
-      Ingredient(name: 'Lettuce'),
-      Ingredient(name: 'Bread')
+      Ingredient(id: 0, name: 'Tomato'),
+      Ingredient(id: 1, name: 'Lettuce'),
+      Ingredient(id: 2, name: 'Bread')
     ];
 
     for (var ingredient in defaultIngredients) {
@@ -352,6 +385,21 @@ class DatabaseHelper {
     return recipeList;
   }
 
+  // Get next available recipe ID in the database
+  Future<int> getNextAvailableRecipeId() async {
+    Database db = await instance.database;
+    var idQuery = await db.rawQuery('''SELECT MAX(id) FROM recipes;''');
+
+    int id;
+    if (idQuery.first['MAX(id)'] == null) {
+      id = 0;
+    } else {
+      id = idQuery.first['MAX(id)'] as int;
+      id += 1;
+    }
+    return id;
+  }
+
   Future<List<Ingredient>> getIngredients() async {
     Database db = await instance.database;
     var ingredientsQuery = await db.query('ingredients', orderBy: 'name');
@@ -362,16 +410,14 @@ class DatabaseHelper {
   }
 
   // Queries the database for the ingredients in a recipe
-  Future<List<Ingredient>> getRecipeIngredients(int id) async {
+  Future<List<Ingredient>> getRecipeIngredients(int recipeId) async {
     Database db = await instance.database;
     var ingredientQuery = await db.rawQuery('''
-      SELECT * FROM ingredients 
-      WHERE ingredients.id IN (
-        SELECT ingredientId 
-        FROM recipeIngredients 
-        WHERE recipeId = ?
-      )
-      ''', [id]);
+      SELECT * FROM ingredients WHERE id IN (
+        SELECT ingredient_id FROM recipeIngredients 
+        WHERE recipe_id = ?
+      );
+      ''', [recipeId]);
     List<Ingredient> ingredientList = ingredientQuery.isNotEmpty
         ? ingredientQuery.map((c) => Ingredient.fromMap(c)).toList()
         : [];
@@ -388,10 +434,10 @@ class DatabaseHelper {
     return allIngredients;
   }
 
-  // Adds ingredient
-  Future<int> addIngredient(Ingredient ingredient) async {
+  // Adds ingredient to the database
+  Future<void> addIngredient(Ingredient ingredient) async {
     Database db = await instance.database;
-    return await db.insert('ingredients', ingredient.toMap(),
+    await db.insert('ingredients', ingredient.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -401,15 +447,16 @@ class DatabaseHelper {
     await db.insert('recipes', recipe.toMap());
     for (var ingredientId in ingredientIds) {
       await db.insert('recipeIngredients',
-          {'recipeId': recipe.id, 'ingredientId': ingredientId});
+          {'recipe_id': recipe.id, 'ingredient_id': ingredientId});
     }
   }
 
   // Removes recipe from list
-  Future<void> removeRecipe(int id) async {
+  Future<void> removeRecipe(int recipeId) async {
     Database db = await instance.database;
-    await db.delete('recipes', where: 'id = ?', whereArgs: [id]);
-    await db.delete('recipeIngredients', where: 'id = ?', whereArgs: [id]);
+    await db.delete('recipes', where: 'id = ?', whereArgs: [recipeId]);
+    await db.delete('recipeIngredients',
+        where: 'recipe_id = ?', whereArgs: [recipeId]);
   }
 
   // Update a recipe
