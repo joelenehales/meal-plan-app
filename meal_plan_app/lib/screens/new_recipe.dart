@@ -74,7 +74,7 @@ class _NewRecipePageState extends State<NewRecipePage> {
           children: [
             FloatingActionButton(
                 tooltip: 'Save',
-                child: const Icon(Icons.add_outlined),
+                child: const Icon(Icons.save),
                 onPressed: () async {
                   // Add recipe with the entered name and ingredients
                   int nextRecipeId =
@@ -84,8 +84,10 @@ class _NewRecipePageState extends State<NewRecipePage> {
                         Recipe(id: nextRecipeId, name: textController.text),
                         selectedIngredientIds);
                     // TODO: Give an error if no ingredients are selected
+                    // TODO: Give error if duplicate name is entered
+                    // TODO: Give confirmation if entered successfully
                   });
-                  Navigator.pop(context); // Return to main menu
+                  // TODO: Clear, to add another recipe
                 }),
           ],
         ),

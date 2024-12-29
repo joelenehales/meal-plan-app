@@ -25,12 +25,6 @@ class _RecipeListPageState extends State<RecipeListPage> {
   int? selectedRecipe;
   final textController = TextEditingController();
 
-  // Reload recipe list by refreshing the state
-  // Used when returning home after adding a new recipe, so the new recipe shows up
-  FutureOr refresh(dynamic value) {
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,16 +119,6 @@ class _RecipeListPageState extends State<RecipeListPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FloatingActionButton(
-                tooltip: 'New Recipe',
-                child: const Icon(Icons.add_outlined),
-                onPressed: () async {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const NewRecipePage()),
-                  ).then(refresh);
-                }),
             FloatingActionButton(
               tooltip: 'Rename Selected Recipe',
               child: const Icon(Icons.edit_outlined),
