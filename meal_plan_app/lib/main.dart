@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:meal_plan_app/screens/home.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,22 +26,23 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      home: MainHomeScreen(),
     );
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class MainHomeScreen extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _MainHomeScreenState createState() => _MainHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+class _MainHomeScreenState extends State<MainHomeScreen> {
+  int _selectedIndex = 2;
 
-  final List<Widget> widgetOptions = const [
-    RecipeListPage(title: 'All Recipes'), // TODO: Remove this paramwter
-    NewRecipePage()
+  final List<Widget> screensList = const [
+    RecipeListPage(),
+    NewRecipePage(),
+    Home()
   ];
 
   // Change screen to the selected navigation button
@@ -50,15 +52,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // TODO: Change the colours
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-            'Meal Planner App'), // TODO: Change to the final name of the app
+            'Meal Planner App' // TODO: Change to the final name of the app
+            ),
       ),
-      body: widgetOptions.elementAt(_selectedIndex),
+
+      // Bottom navigation bar
+      // TODO: Change the colours
+      body: screensList.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
         showSelectedLabels: true,
         showUnselectedLabels: true,
@@ -67,12 +72,17 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.blueGrey,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: Icon(Icons.list),
+            label: 'View All Recipes',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_outlined),
             label: 'Add New Recipe',
+            // TODO: Put this option in the "View All Recipes" page
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
         ],
         currentIndex: _selectedIndex,

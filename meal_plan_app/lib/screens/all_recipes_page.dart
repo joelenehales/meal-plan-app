@@ -9,13 +9,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:meal_plan_app/objects/ingredient.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
 import 'package:meal_plan_app/database_helper.dart';
-import 'new_recipe.dart';
 
 // Displays all recipes
 class RecipeListPage extends StatefulWidget {
-  const RecipeListPage({super.key, required this.title});
-
-  final String title;
+  const RecipeListPage({super.key});
 
   @override
   State<RecipeListPage> createState() => _RecipeListPageState();
