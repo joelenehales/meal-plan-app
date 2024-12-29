@@ -32,7 +32,8 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE ingredients(
         id INTEGER PRIMARY KEY,
-        name TEXT
+        name TEXT,
+        type TEXT
       );
     ''');
 
@@ -54,9 +55,9 @@ class DatabaseHelper {
     ''');
 
     List<Ingredient> defaultIngredients = [
-      Ingredient(id: 0, name: 'Tomato'),
-      Ingredient(id: 1, name: 'Lettuce'),
-      Ingredient(id: 2, name: 'Bread')
+      Ingredient(id: 0, name: 'Tomato', type: IngredientType.produce),
+      Ingredient(id: 1, name: 'Lettuce', type: IngredientType.produce),
+      Ingredient(id: 2, name: 'Bread', type: IngredientType.bakery)
     ];
 
     for (var ingredient in defaultIngredients) {
