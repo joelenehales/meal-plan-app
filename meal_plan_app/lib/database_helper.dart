@@ -54,10 +54,42 @@ class DatabaseHelper {
       );
     ''');
 
+    _initializeIngredients(db);
+  }
+
+  // Initialize database with a lsit of ingredients
+  void _initializeIngredients(Database db) async {
+    int id = 0;
     List<Ingredient> defaultIngredients = [
-      Ingredient(id: 0, name: 'Tomato', type: IngredientType.produce),
-      Ingredient(id: 1, name: 'Lettuce', type: IngredientType.produce),
-      Ingredient(id: 2, name: 'Bread', type: IngredientType.bakery)
+      // Produce
+      Ingredient(id: id++, name: 'Avocado', type: IngredientType.produce),
+      Ingredient(id: id++, name: 'Lettuce', type: IngredientType.produce),
+      Ingredient(id: id++, name: 'Onion', type: IngredientType.produce),
+      Ingredient(id: id++, name: 'Bell Pepper', type: IngredientType.produce),
+      Ingredient(
+          id: id++, name: 'Tomato (Hierloom)', type: IngredientType.produce),
+      Ingredient(
+          id: id++, name: 'Tomato (Cherry)', type: IngredientType.produce),
+      // Dairy
+      Ingredient(id: id++, name: 'Butter', type: IngredientType.dairy),
+      Ingredient(id: id++, name: 'Eggs', type: IngredientType.dairy),
+      Ingredient(id: id++, name: 'Milk', type: IngredientType.dairy),
+      // Meat
+      Ingredient(id: id++, name: 'Chicken (Thigh)', type: IngredientType.meat),
+      Ingredient(id: id++, name: 'Chicken (Breast)', type: IngredientType.meat),
+      Ingredient(id: id++, name: 'Chicken (Wing)', type: IngredientType.meat),
+      Ingredient(id: id++, name: 'Bacon', type: IngredientType.meat),
+      Ingredient(id: id++, name: 'Ground Beef', type: IngredientType.meat),
+      // Seafood
+
+      // Bakery
+      Ingredient(id: id++, name: 'Bagel', type: IngredientType.bakery),
+      Ingredient(id: id++, name: 'Bread', type: IngredientType.bakery),
+      Ingredient(id: id++, name: 'Tortillas', type: IngredientType.bakery),
+      // Pantry
+      Ingredient(id: id++, name: 'Cashews', type: IngredientType.pantry),
+      Ingredient(id: id++, name: 'Tomato Paste', type: IngredientType.pantry),
+      // Frozen
     ];
 
     for (var ingredient in defaultIngredients) {
@@ -93,7 +125,7 @@ class DatabaseHelper {
 
   Future<List<Ingredient>> getIngredients() async {
     Database db = await instance.database;
-    var ingredientsQuery = await db.query('ingredients', orderBy: 'name');
+    var ingredientsQuery = await db.query('ingredients', orderBy: 'type, name');
     List<Ingredient> ingredients = ingredientsQuery.isNotEmpty
         ? ingredientsQuery.map((c) => Ingredient.fromMap(c)).toList()
         : [];
