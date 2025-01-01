@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'recipe_viewer.dart';
+import 'new_recipe.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
 import 'package:meal_plan_app/database_helper.dart';
 
@@ -28,7 +29,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
       // The top bar of the app
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('All Recipes'),
+        title: const Text('My Recipes'),
       ),
 
       body: Center(
@@ -69,6 +70,28 @@ class _RecipeListPageState extends State<RecipeListPage> {
                     );
                   }
                 }),
+
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FloatingActionButton(
+                    tooltip: 'New Recipe',
+                    child: const Icon(Icons.add),
+                    onPressed: () async {
+                      setState(() {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const NewRecipePage()),
+                        ).then(refresh);
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

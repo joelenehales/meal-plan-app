@@ -120,7 +120,11 @@ class _RecipeViewerState extends State<RecipeViewer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // TODO: Add app bar
+      // The top bar of the app
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('My Recipes'),
+      ),
 
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,

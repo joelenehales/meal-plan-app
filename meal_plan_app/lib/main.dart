@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:meal_plan_app/screens/home.dart';
 
 import 'screens/all_recipes_page.dart';
-import 'screens/new_recipe.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +14,7 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MainHomeScreen(),
     );
@@ -23,18 +22,16 @@ class App extends StatelessWidget {
 }
 
 class MainHomeScreen extends StatefulWidget {
+  const MainHomeScreen({super.key});
+
   @override
-  _MainHomeScreenState createState() => _MainHomeScreenState();
+  State<MainHomeScreen> createState() => _MainHomeScreenState();
 }
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
-  int _selectedIndex = 2;
+  int _selectedIndex = 1;
 
-  final List<Widget> screensList = const [
-    RecipeListPage(),
-    NewRecipePage(),
-    Home()
-  ];
+  final List<Widget> screensList = const [RecipeListPage(), Home()];
 
   // Change screen to the selected navigation button
   void _onItemTapped(int index) {
@@ -65,11 +62,6 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
             label: 'View All Recipes',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_outlined),
-            label: 'Add New Recipe',
-            // TODO: Put this option in the "View All Recipes" page
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

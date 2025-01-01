@@ -76,6 +76,7 @@ class _NewRecipePageState extends State<NewRecipePage> {
                       // TODO: Give error if duplicate name is entered
                       // TODO: Give confirmation if entered successfully
                     });
+                    Navigator.pop(context); // Return to recipe list
                   },
                 ),
               ],
