@@ -123,6 +123,13 @@ class DatabaseHelper {
     return id;
   }
 
+  // Returns true if a recipe with the entered name already exists
+  Future<bool> duplicateRecipeName(String name) async {
+    Database db = await instance.database;
+    var query = await db.query('recipes', where: 'name = ?', whereArgs: [name]);
+    return query.isNotEmpty;
+  }
+
   Future<List<Ingredient>> getIngredients() async {
     Database db = await instance.database;
     var ingredientsQuery = await db.query('ingredients', orderBy: 'type, name');

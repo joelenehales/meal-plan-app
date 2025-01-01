@@ -49,7 +49,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             ),
       ),
 
-      // Bottom navigation bar
+      // Bottom navigation bar. Visible with all screens
       // TODO: Change the colours
       body: screensList.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
