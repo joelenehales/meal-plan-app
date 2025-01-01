@@ -82,27 +82,6 @@ class _RecipeListPageState extends State<RecipeListPage> {
           ],
         ),
       ),
-
-      floatingActionButton: SingleChildScrollView(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FloatingActionButton(
-              tooltip: 'Rename Selected Recipe',
-              child: const Icon(Icons.edit_outlined),
-              onPressed: () async {
-                // If recipe is selected, rename it to the entered text
-                if (selectedRecipe != null) {
-                  setState(() {
-                    DatabaseHelper.instance.renameRecipe(
-                        Recipe(id: selectedRecipe!, name: textController.text));
-                  });
-                }
-              },
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

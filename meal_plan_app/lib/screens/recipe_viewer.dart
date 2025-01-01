@@ -20,6 +20,7 @@ class RecipeViewer extends StatefulWidget {
 class _RecipeViewerState extends State<RecipeViewer> {
   late TextEditingController textController;
   late bool editMode = false;
+  late String currentRecipeName; // Needed to update UI after renaming recipe
   List<int> selectedIngredientIds = [];
 
   void loadRecipeIngredients() async {
@@ -34,7 +35,8 @@ class _RecipeViewerState extends State<RecipeViewer> {
   @override
   void initState() {
     super.initState();
-    textController = TextEditingController(text: widget.recipe.name);
+    currentRecipeName = widget.recipe.name;
+    textController = TextEditingController(text: currentRecipeName);
     loadRecipeIngredients();
   }
 
@@ -56,9 +58,9 @@ class _RecipeViewerState extends State<RecipeViewer> {
             decoration: InputDecoration(
                 labelText: 'Recipe Name',
                 floatingLabelBehavior: FloatingLabelBehavior.always,
-                hintText: widget.recipe.name),
+                hintText: currentRecipeName),
           )
-        : Text(widget.recipe.name);
+        : Text(currentRecipeName);
     return nameWidget;
   }
 
@@ -74,6 +76,7 @@ class _RecipeViewerState extends State<RecipeViewer> {
               DatabaseHelper.instance.renameRecipe(
                   Recipe(id: widget.recipe.id, name: textController.text));
               setState(() {
+                currentRecipeName = textController.text;
                 editMode = false;
               });
             })
@@ -122,9 +125,8 @@ class _RecipeViewerState extends State<RecipeViewer> {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Padding(padding: const EdgeInsets.all(16.0), child: recipeNameWidget()
-              // TODO: Add rename option here
-              ),
+          Padding(
+              padding: const EdgeInsets.all(16.0), child: recipeNameWidget()),
           Expanded(child: SingleChildScrollView(child: ingredientsWidget())),
           Padding(
             // Keep buttons fixed at bottom
