@@ -17,6 +17,26 @@ class _NewRecipePageState extends State<NewRecipePage> {
   List<int> selectedIngredientIds = [];
   final textController = TextEditingController();
 
+  void showErrorDialog(String message, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Error"),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // TODO: Redundant function in recipe_viewer.dart. Move elsewhere (ex. make a
   // "for all" version)
   Widget ingredientsCheckboxWidget() {
@@ -65,18 +85,28 @@ class _NewRecipePageState extends State<NewRecipePage> {
                   tooltip: 'Save',
                   child: const Icon(Icons.save),
                   onPressed: () async {
-                    // Add recipe with the entered name and ingredients
-                    int nextRecipeId = await DatabaseHelper.instance
-                        .getNextAvailableRecipeId();
-                    setState(() {
-                      DatabaseHelper.instance.addRecipe(
-                          Recipe(id: nextRecipeId, name: textController.text),
-                          selectedIngredientIds);
-                      // TODO: Give an error if no ingredients are selected
-                      // TODO: Give error if duplicate name is entered
-                      // TODO: Give confirmation if entered successfully
-                    });
-                    Navigator.pop(context); // Return to recipe list
+                    // Show error if no ingredients have been selected
+                    if (selectedIngredientIds.isEmpty) {
+                      showErrorDialog('No ingredients selected.', context);
+                    }
+                    // Show error if no name is entered
+                    else if (textController.text == "") {
+                      showErrorDialog('No recipe name entered.', context);
+                    }
+                    // Valid input
+                    else {
+                      // Add recipe with the entered name and ingredients
+                      int nextRecipeId = await DatabaseHelper.instance
+                          .getNextAvailableRecipeId();
+                      setState(() {
+                        DatabaseHelper.instance.addRecipe(
+                            Recipe(id: nextRecipeId, name: textController.text),
+                            selectedIngredientIds);
+                        // TODO: Give error if duplicate name is entered
+                        // TODO: Give confirmation if entered successfully
+                      });
+                      Navigator.pop(context); // Return to recipe list
+                    }
                   },
                 ),
               ],
