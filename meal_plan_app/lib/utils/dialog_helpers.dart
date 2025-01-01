@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 
-void showErrorDialog(String message, BuildContext context) {
-  showDialog(
+enum DialogType { error, confirmation }
+
+extension DialogTypeExtention on DialogType {
+  String get label {
+    switch (this) {
+      case DialogType.error:
+        return 'Error';
+      case DialogType.confirmation:
+        return 'Success';
+      default:
+        return 'Other';
+    }
+  }
+}
+
+Future<void> customDialog(
+    String message, DialogType type, BuildContext context) {
+  return showDialog<void>(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: const Text("Error"),
+        title: Text(type.label),
         content: Text(message),
         actions: <Widget>[
           TextButton(

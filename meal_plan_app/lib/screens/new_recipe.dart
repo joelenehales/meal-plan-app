@@ -69,17 +69,20 @@ class _NewRecipePageState extends State<NewRecipePage> {
                     String recipeName = textController.text;
                     // Show error if no ingredients have been selected
                     if (selectedIngredientIds.isEmpty) {
-                      showErrorDialog('No ingredients selected.', context);
+                      customDialog('No ingredients selected.', DialogType.error,
+                          context);
                     }
                     // Show error if no name is entered
                     else if (recipeName == "") {
-                      showErrorDialog('No recipe name entered.', context);
+                      customDialog(
+                          'No recipe name entered.', DialogType.error, context);
                     }
                     // Duplicate recipe name
                     else if (await DatabaseHelper.instance
                         .duplicateRecipeName(recipeName)) {
-                      showErrorDialog(
+                      customDialog(
                           'Recipe with the entered name already exists.',
+                          DialogType.error,
                           context);
                     }
                     // Valid input
@@ -91,9 +94,13 @@ class _NewRecipePageState extends State<NewRecipePage> {
                         DatabaseHelper.instance.addRecipe(
                             Recipe(id: nextRecipeId, name: textController.text),
                             selectedIngredientIds);
-                        // TODO: Give confirmation if entered successfully
                       });
-                      Navigator.pop(context); // Return to recipe list
+                      customDialog('Recipe added successfully!',
+                              DialogType.confirmation, context)
+                          .then((_) {
+                        Navigator.pop(
+                            context); // Return to recipe list after popup is confirmed
+                      });
                     }
                   },
                 ),
