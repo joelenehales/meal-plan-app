@@ -23,6 +23,39 @@ class _RecipeListPageState extends State<RecipeListPage> {
     setState(() {});
   }
 
+  // Displays a list of recipes as cards
+  Widget recipeListWidget() {
+    return FutureBuilder<List<Recipe>>(
+        future: DatabaseHelper.instance.getRecipeList(),
+        builder: (BuildContext context, AsyncSnapshot<List<Recipe>> snapshot) {
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Text('No recipes to display.');
+          } else {
+            return Column(
+              children: snapshot.data!.map((recipe) {
+                return Card(
+                  // Each recipe
+                  child: ListTile(
+                    title: Text(recipe.name),
+                    onTap: () {
+                      // Tap recipe to view recipe with ingredients
+                      setState(() {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  RecipeViewer(recipe: recipe)),
+                        ).then(refresh);
+                      });
+                    },
+                  ),
+                );
+              }).toList(),
+            );
+          }
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,68 +65,38 @@ class _RecipeListPageState extends State<RecipeListPage> {
         title: const Text('My Recipes'),
       ),
 
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            //const Text('Search Recipe'), // TODO: Implement search
-            //TextField(controller: textController),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          //const Text('Search Recipe'), // TODO: Implement search
+          //TextField(controller: textController),
 
-            // Display all recipes. Click to view recipe
-            FutureBuilder<List<Recipe>>(
-                future: DatabaseHelper.instance.getRecipeList(),
-                builder: (BuildContext context,
-                    AsyncSnapshot<List<Recipe>> snapshot) {
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No recipes to display.'));
-                  } else {
-                    return Column(
-                      children: snapshot.data!.map((recipe) {
-                        return Card(
-                          child: ListTile(
-                            // Each recipe
-                            title: Text(recipe.name),
-                            onTap: () {
-                              // Tap recipe to view ingredients
-                              setState(() {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          RecipeViewer(recipe: recipe)),
-                                ).then(refresh);
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  }
-                }),
-
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FloatingActionButton(
-                    tooltip: 'New Recipe',
-                    child: const Icon(Icons.add),
-                    onPressed: () async {
-                      setState(() {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const NewRecipePage()),
-                        ).then(refresh);
-                      });
-                    },
-                  ),
-                ],
-              ),
+          // Display all recipes
+          Expanded(
+            child: SingleChildScrollView(child: recipeListWidget()),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FloatingActionButton(
+                  tooltip: 'New Recipe',
+                  child: const Icon(Icons.add),
+                  onPressed: () async {
+                    setState(() {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const NewRecipePage()),
+                      ).then(refresh);
+                    });
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
