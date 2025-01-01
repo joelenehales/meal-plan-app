@@ -21,13 +21,15 @@ class _NewRecipePageState extends State<NewRecipePage> {
   // "for all" version)
   Widget ingredientsCheckboxWidget() {
     List<Widget> widgets = [];
-
     for (var ingredientType in IngredientType.values) {
-      widgets.add(ListTile(
-          leading: ingredientType.icon, title: Text(ingredientType.name)));
-      widgets.add(IngredientCheckboxWidget(
-          selectedIngredientIds: selectedIngredientIds,
-          ingredientType: ingredientType));
+      widgets.add(ExpansionTile(
+          leading: ingredientType.icon,
+          title: Text(ingredientType.name),
+          children: <Widget>[
+            IngredientCheckboxWidget(
+                selectedIngredientIds: selectedIngredientIds,
+                ingredientType: ingredientType)
+          ]));
     }
     return Column(children: widgets);
   }

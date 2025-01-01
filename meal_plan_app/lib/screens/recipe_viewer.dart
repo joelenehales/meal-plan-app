@@ -91,18 +91,21 @@ class _RecipeViewerState extends State<RecipeViewer> {
   // Returns list of ingredients in the recipe, or form to edit ingredients
   Widget ingredientsWidget() {
     List<Widget> widgets = [];
-
     for (var ingredientType in IngredientType.values) {
-      widgets.add(ListTile(
-        leading: ingredientType.icon,
-        title: Text(ingredientType.name),
-      ));
-
       if (editMode) {
-        widgets.add(IngredientCheckboxWidget(
-            selectedIngredientIds: selectedIngredientIds,
-            ingredientType: ingredientType));
+        widgets.add(ExpansionTile(
+            leading: ingredientType.icon,
+            title: Text(ingredientType.name),
+            children: <Widget>[
+              IngredientCheckboxWidget(
+                  selectedIngredientIds: selectedIngredientIds,
+                  ingredientType: ingredientType)
+            ]));
       } else {
+        widgets.add(ListTile(
+          leading: ingredientType.icon,
+          title: Text(ingredientType.name),
+        ));
         widgets.add(RecipeIngredientsWidget(
             recipe: widget.recipe, ingredientType: ingredientType));
       }
