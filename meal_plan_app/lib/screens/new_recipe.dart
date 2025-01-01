@@ -85,13 +85,21 @@ class _NewRecipePageState extends State<NewRecipePage> {
                   tooltip: 'Save',
                   child: const Icon(Icons.save),
                   onPressed: () async {
+                    String recipeName = textController.text;
                     // Show error if no ingredients have been selected
                     if (selectedIngredientIds.isEmpty) {
                       showErrorDialog('No ingredients selected.', context);
                     }
                     // Show error if no name is entered
-                    else if (textController.text == "") {
+                    else if (recipeName == "") {
                       showErrorDialog('No recipe name entered.', context);
+                    }
+                    // Duplicate recipe name
+                    else if (await DatabaseHelper.instance
+                        .duplicateRecipeName(recipeName)) {
+                      showErrorDialog(
+                          'Recipe with the entered name already exists.',
+                          context);
                     }
                     // Valid input
                     else {
@@ -102,7 +110,6 @@ class _NewRecipePageState extends State<NewRecipePage> {
                         DatabaseHelper.instance.addRecipe(
                             Recipe(id: nextRecipeId, name: textController.text),
                             selectedIngredientIds);
-                        // TODO: Give error if duplicate name is entered
                         // TODO: Give confirmation if entered successfully
                       });
                       Navigator.pop(context); // Return to recipe list
