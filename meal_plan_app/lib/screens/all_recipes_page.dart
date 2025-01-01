@@ -14,7 +14,6 @@ class RecipeListPage extends StatefulWidget {
 }
 
 class _RecipeListPageState extends State<RecipeListPage> {
-  int? selectedRecipe;
   final textController = TextEditingController();
 
   // Reload recipe list by refreshing the state
@@ -36,9 +35,10 @@ class _RecipeListPageState extends State<RecipeListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('Search Recipe'), // TODO: Implement search
-            TextField(controller: textController),
-            // Displays all recipes
+            //const Text('Search Recipe'), // TODO: Implement search
+            //TextField(controller: textController),
+
+            // Display all recipes. Click to view recipe
             FutureBuilder<List<Recipe>>(
                 future: DatabaseHelper.instance.getRecipeList(),
                 builder: (BuildContext context,
@@ -46,33 +46,23 @@ class _RecipeListPageState extends State<RecipeListPage> {
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return const Center(child: Text('No recipes to display.'));
                   } else {
-                    return ListView(
-                      shrinkWrap: true,
+                    return Column(
                       children: snapshot.data!.map((recipe) {
-                        return Center(
-                          child: Card(
-                            // Add gray colour to selected recipe
-                            color: selectedRecipe == recipe.id
-                                ? Colors.white70
-                                : Colors.white,
+                        return Card(
+                          child: ListTile(
                             // Each recipe
-                            child: ListTile(
-                              title: Text(recipe.name),
-                              onTap: () {
-                                // Tap to select recipe to edit or remove
-                                setState(() {
-                                  // TODO: Here, switch screen to recipe
-                                  //textController.text = recipe.name;
-                                  selectedRecipe = recipe.id;
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            RecipeViewer(recipe: recipe)),
-                                  ).then(refresh);
-                                });
-                              },
-                            ),
+                            title: Text(recipe.name),
+                            onTap: () {
+                              // Tap recipe to view ingredients
+                              setState(() {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          RecipeViewer(recipe: recipe)),
+                                ).then(refresh);
+                              });
+                            },
                           ),
                         );
                       }).toList(),
