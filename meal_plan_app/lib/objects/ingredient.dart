@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-enum IngredientType { produce, dairy, meat, seafood, bakery, pantry, frozen }
+enum IngredientType { produce, dairy, meat, seafood, bakery, pantry }
 
 extension IngredientTypeExtension on IngredientType {
   // Get ingredient type name
@@ -19,8 +19,6 @@ extension IngredientTypeExtension on IngredientType {
         return 'Bakery';
       case IngredientType.pantry:
         return 'Pantry';
-      case IngredientType.frozen:
-        return 'Frozen';
       default:
         return 'Unknown';
     }
@@ -41,8 +39,6 @@ extension IngredientTypeExtension on IngredientType {
         return const Icon(FontAwesomeIcons.breadSlice);
       case IngredientType.pantry:
         return const Icon(FontAwesomeIcons.jarWheat);
-      case IngredientType.frozen:
-        return const Icon(FontAwesomeIcons.iceCream);
       default:
         return const Icon(Icons.question_mark);
     }

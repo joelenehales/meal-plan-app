@@ -4,8 +4,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../objects/recipe.dart';
-import '../objects/ingredient.dart';
+import 'package:meal_plan_app/objects/recipe.dart';
+import 'package:meal_plan_app/objects/ingredient.dart';
+import 'package:meal_plan_app/objects/meal_plan.dart';
 
 class DatabaseHelper {
   DatabaseHelper._privateConstructor();
@@ -45,12 +46,29 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
+      CREATE TABLE mealPlans(
+        id INTEGER PRIMARY KEY,
+        name TEXT
+      );
+    ''');
+
+    await db.execute('''
       CREATE TABLE recipeIngredients(
         recipe_id INTEGER NOT NULL,
         ingredient_id INTEGER NOT NULL,
         FOREIGN KEY(recipe_id) REFERENCES recipes(id),
         FOREIGN KEY(ingredient_id) REFERENCES ingredients(id),
         PRIMARY KEY (recipe_id, ingredient_id)
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE mealPlanRecipes(
+        meal_plan_id INTEGER NOT NULL,
+        recipe_id INTEGER NOT NULL,
+        FOREIGN KEY(meal_plan_id) REFERENCES mealPlans(id),
+        FOREIGN KEY(recipe_id) REFERENCES recipes(id),
+        PRIMARY KEY (meal_plan_id, recipe_id)
       );
     ''');
 
@@ -63,9 +81,11 @@ class DatabaseHelper {
     List<Ingredient> defaultIngredients = [
       // Produce
       Ingredient(id: id++, name: 'Avocado', type: IngredientType.produce),
+      Ingredient(id: id++, name: 'Kale', type: IngredientType.produce),
       Ingredient(id: id++, name: 'Lettuce', type: IngredientType.produce),
       Ingredient(id: id++, name: 'Onion', type: IngredientType.produce),
       Ingredient(id: id++, name: 'Bell Pepper', type: IngredientType.produce),
+      Ingredient(id: id++, name: 'Spinach', type: IngredientType.produce),
       Ingredient(
           id: id++, name: 'Tomato (Hierloom)', type: IngredientType.produce),
       Ingredient(
@@ -81,7 +101,8 @@ class DatabaseHelper {
       Ingredient(id: id++, name: 'Bacon', type: IngredientType.meat),
       Ingredient(id: id++, name: 'Ground Beef', type: IngredientType.meat),
       // Seafood
-
+      Ingredient(id: id++, name: 'Halibut', type: IngredientType.seafood),
+      Ingredient(id: id++, name: 'Salmon', type: IngredientType.seafood),
       // Bakery
       Ingredient(id: id++, name: 'Bagel', type: IngredientType.bakery),
       Ingredient(id: id++, name: 'Bread', type: IngredientType.bakery),
@@ -89,7 +110,6 @@ class DatabaseHelper {
       // Pantry
       Ingredient(id: id++, name: 'Cashews', type: IngredientType.pantry),
       Ingredient(id: id++, name: 'Tomato Paste', type: IngredientType.pantry),
-      // Frozen
     ];
 
     for (var ingredient in defaultIngredients) {
@@ -98,20 +118,76 @@ class DatabaseHelper {
     }
   }
 
+  // Queries the database for all ingredients and returns in a list
+  // TODO: This is currently not used
+  Future<List<Ingredient>> getAllIngredients() async {
+    Database db = await instance.database;
+    var ingredients = await db.query('ingredients', orderBy: 'name');
+    List<Ingredient> allIngredients = ingredients.isNotEmpty
+        ? ingredients.map((c) => Ingredient.fromMap(c)).toList()
+        : [];
+    return allIngredients;
+  }
+
+  // Return all ingredients of a certain type
+  Future<List<Ingredient>> getIngredientByType(IngredientType type) async {
+    Database db = await instance.database;
+    var ingredientsQuery = await db.query('ingredients',
+        where: 'type = ?', whereArgs: [type.name], orderBy: 'name');
+    List<Ingredient> ingredients = ingredientsQuery.isNotEmpty
+        ? ingredientsQuery.map((c) => Ingredient.fromMap(c)).toList()
+        : [];
+    return ingredients;
+  }
+
+  // Adds ingredient to the database
+  // TODO: This is currently unused
+  Future<void> addIngredient(Ingredient ingredient) async {
+    Database db = await instance.database;
+    await db.insert('ingredients', ingredient.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
   // Queries the database for all recipes and returns in a list
   Future<List<Recipe>> getRecipeList() async {
     Database db = await instance.database;
-    var recipes = await db.query('recipes', orderBy: 'name');
-    List<Recipe> recipeList = recipes.isNotEmpty
-        ? recipes.map((c) => Recipe.fromMap(c)).toList()
+    var recipesQuery = await db.query('recipes', orderBy: 'name');
+    List<Recipe> recipeList = recipesQuery.isNotEmpty
+        ? recipesQuery.map((c) => Recipe.fromMap(c)).toList()
         : [];
     return recipeList;
+  }
+
+  // Queries the database for all recipes and returns in a list
+  Future<List<MealPlan>> getMealPlanList() async {
+    Database db = await instance.database;
+    var mealPlansQuery = await db.query('mealPlans', orderBy: 'name');
+    List<MealPlan> mealPlanList = mealPlansQuery.isNotEmpty
+        ? mealPlansQuery.map((c) => MealPlan.fromMap(c)).toList()
+        : [];
+    return mealPlanList;
   }
 
   // Get next available recipe ID in the database
   Future<int> getNextAvailableRecipeId() async {
     Database db = await instance.database;
     var idQuery = await db.rawQuery('''SELECT MAX(id) FROM recipes;''');
+
+    int id;
+    if (idQuery.first['MAX(id)'] == null) {
+      id = 0;
+    } else {
+      id = idQuery.first['MAX(id)'] as int;
+      id += 1;
+    }
+    return id;
+  }
+
+  // Get next available meal plan ID in the database
+  // TODO: Somehow reuse this code with the above, sub in different table name
+  Future<int> getNextAvailableMealPlanId() async {
+    Database db = await instance.database;
+    var idQuery = await db.rawQuery('''SELECT MAX(id) FROM mealPlans;''');
 
     int id;
     if (idQuery.first['MAX(id)'] == null) {
@@ -130,24 +206,13 @@ class DatabaseHelper {
     return query.isNotEmpty;
   }
 
-  Future<List<Ingredient>> getIngredients() async {
+  // Returns true if a meal plan with the entered name already exists
+  // TODO: Can rename this and make a wrapper, reuse code from above
+  Future<bool> duplicateMealPlanName(String name) async {
     Database db = await instance.database;
-    var ingredientsQuery = await db.query('ingredients', orderBy: 'type, name');
-    List<Ingredient> ingredients = ingredientsQuery.isNotEmpty
-        ? ingredientsQuery.map((c) => Ingredient.fromMap(c)).toList()
-        : [];
-    return ingredients;
-  }
-
-  // Return all ingredients of a certain type
-  Future<List<Ingredient>> getIngredientByType(IngredientType type) async {
-    Database db = await instance.database;
-    var ingredientsQuery = await db.query('ingredients',
-        where: 'type = ?', whereArgs: [type.name], orderBy: 'name');
-    List<Ingredient> ingredients = ingredientsQuery.isNotEmpty
-        ? ingredientsQuery.map((c) => Ingredient.fromMap(c)).toList()
-        : [];
-    return ingredients;
+    var query =
+        await db.query('mealPlans', where: 'name = ?', whereArgs: [name]);
+    return query.isNotEmpty;
   }
 
   // Queries the database for the ingredients in a recipe
@@ -181,21 +246,19 @@ class DatabaseHelper {
     return ingredientList;
   }
 
-  // Queries the database for all ingredients and returns in a list
-  Future<List<Ingredient>> allIngredients() async {
+  // Queries the database for the recipes in a meal plan
+  Future<List<Recipe>> getMealPlanRecipes(int mealPlanId) async {
     Database db = await instance.database;
-    var ingredients = await db.query('ingredients', orderBy: 'name');
-    List<Ingredient> allIngredients = ingredients.isNotEmpty
-        ? ingredients.map((c) => Ingredient.fromMap(c)).toList()
+    var recipeQuery = await db.rawQuery('''
+      SELECT * FROM recipes WHERE id IN (
+        SELECT recipe_id FROM mealPlanRecipes 
+        WHERE meal_plan_id = ?
+      );
+      ''', [mealPlanId]);
+    List<Recipe> recipeList = recipeQuery.isNotEmpty
+        ? recipeQuery.map((c) => Recipe.fromMap(c)).toList()
         : [];
-    return allIngredients;
-  }
-
-  // Adds ingredient to the database
-  Future<void> addIngredient(Ingredient ingredient) async {
-    Database db = await instance.database;
-    await db.insert('ingredients', ingredient.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return recipeList;
   }
 
   // Adds recipe and its ingredients to databae
@@ -208,7 +271,17 @@ class DatabaseHelper {
     }
   }
 
-  // Removes recipe from list
+  // Adds a meal plan and its recipes to databae
+  Future<void> addMealPlan(MealPlan mealPlan, List<int> recipeIds) async {
+    Database db = await instance.database;
+    await db.insert('mealPlans', mealPlan.toMap());
+    for (var recipeId in recipeIds) {
+      await db.insert('mealPlanRecipes',
+          {'meal_plan_id': mealPlan.id, 'recipe_id': recipeId});
+    }
+  }
+
+  // Removes recipe from database
   Future<void> removeRecipe(int recipeId) async {
     Database db = await instance.database;
     await db.delete('recipes', where: 'id = ?', whereArgs: [recipeId]);
@@ -216,12 +289,26 @@ class DatabaseHelper {
         where: 'recipe_id = ?', whereArgs: [recipeId]);
   }
 
-  // Update a recipe
-  // TODO: Add a way to update recipe ingredients
+  // Removes meal plan from database
+  Future<void> removeMealPlan(int mealPlanId) async {
+    Database db = await instance.database;
+    await db.delete('mealPlans', where: 'id = ?', whereArgs: [mealPlanId]);
+    await db.delete('mealPlanRecipes',
+        where: 'meal_plan_id = ?', whereArgs: [mealPlanId]);
+  }
+
+  // Rename a recipe
   Future<int> renameRecipe(Recipe recipe) async {
     Database db = await instance.database;
     return await db.update('recipes', recipe.toMap(),
         where: 'id = ?', whereArgs: [recipe.id]);
+  }
+
+  // Rename a meal plan
+  Future<int> renameMealPlan(MealPlan mealPlan) async {
+    Database db = await instance.database;
+    return await db.update('mealPlans', mealPlan.toMap(),
+        where: 'id = ?', whereArgs: [mealPlan.id]);
   }
 
   // Edit recipe ingredients
@@ -235,6 +322,19 @@ class DatabaseHelper {
     for (var ingredientId in ingredientIds) {
       await db.insert('recipeIngredients',
           {'recipe_id': recipeId, 'ingredient_id': ingredientId});
+    }
+  }
+
+  // Edit meal plan recipes
+  Future<void> editMealPlanRecipes(int mealPlanId, List<int> recipeIds) async {
+    Database db = await instance.database;
+
+    await db.delete('mealPlanRecipes',
+        where: 'meal_plan_id = ?', whereArgs: [mealPlanId]);
+
+    for (var recipeId in recipeIds) {
+      await db.insert('mealPlanRecipes',
+          {'meal_plan_id': mealPlanId, 'recipe_id': recipeId});
     }
   }
 }
