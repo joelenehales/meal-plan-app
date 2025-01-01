@@ -41,44 +41,45 @@ class _NewRecipePageState extends State<NewRecipePage> {
         title: const Text('Add New Recipe'),
       ),
 
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            TextField(
-                controller: textController,
-                decoration: const InputDecoration(
-                    labelText: 'Recipe Name',
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                    hintText: 'New Recipe')),
-            ingredientsCheckboxWidget(),
-          ],
-        ),
-      ),
-
-      floatingActionButton: SingleChildScrollView(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FloatingActionButton(
-                tooltip: 'Save',
-                child: const Icon(Icons.save),
-                onPressed: () async {
-                  // Add recipe with the entered name and ingredients
-                  int nextRecipeId =
-                      await DatabaseHelper.instance.getNextAvailableRecipeId();
-                  setState(() {
-                    DatabaseHelper.instance.addRecipe(
-                        Recipe(id: nextRecipeId, name: textController.text),
-                        selectedIngredientIds);
-                    // TODO: Give an error if no ingredients are selected
-                    // TODO: Give error if duplicate name is entered
-                    // TODO: Give confirmation if entered successfully
-                  });
-                  // TODO: Clear, to add another recipe
-                }),
-          ],
-        ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                  controller: textController,
+                  decoration: const InputDecoration(
+                      labelText: 'Recipe Name',
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      hintText: 'New Recipe'))),
+          Expanded(
+              child: SingleChildScrollView(child: ingredientsCheckboxWidget())),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FloatingActionButton(
+                  tooltip: 'Save',
+                  child: const Icon(Icons.save),
+                  onPressed: () async {
+                    // Add recipe with the entered name and ingredients
+                    int nextRecipeId = await DatabaseHelper.instance
+                        .getNextAvailableRecipeId();
+                    setState(() {
+                      DatabaseHelper.instance.addRecipe(
+                          Recipe(id: nextRecipeId, name: textController.text),
+                          selectedIngredientIds);
+                      // TODO: Give an error if no ingredients are selected
+                      // TODO: Give error if duplicate name is entered
+                      // TODO: Give confirmation if entered successfully
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

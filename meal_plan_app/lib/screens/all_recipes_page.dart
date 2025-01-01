@@ -43,47 +43,41 @@ class _RecipeListPageState extends State<RecipeListPage> {
                 future: DatabaseHelper.instance.getRecipeList(),
                 builder: (BuildContext context,
                     AsyncSnapshot<List<Recipe>> snapshot) {
-                  if (!snapshot.hasData) {
-                    return Center(child: Text('Loading...'));
-                  }
-                  return snapshot.data!
-                          .isEmpty // Check if there are recipes to display
-                      ? Center(child: Text('No Recipes to Display'))
-                      : ListView(
-                          shrinkWrap: true,
-                          children: snapshot.data!.map((recipe) {
-                            return Center(
-                              child: Card(
-                                // Add gray colour to selected recipe
-                                color: selectedRecipe == recipe.id
-                                    ? Colors.white70
-                                    : Colors.white,
-                                // Each recipe
-                                child: ListTile(
-                                  title: Text(recipe.name),
-                                  // List the recipe's ingredients
-                                  subtitle: Column(
-                                    children: <Widget>[],
-                                  ),
-                                  onTap: () {
-                                    // Tap to select recipe to edit or remove
-                                    setState(() {
-                                      // TODO: Here, switch screen to recipe
-                                      //textController.text = recipe.name;
-                                      selectedRecipe = recipe.id;
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                RecipeViewer(recipe: recipe)),
-                                      ).then(refresh);
-                                    });
-                                  },
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No recipes to display.'));
+                  } else {
+                    return ListView(
+                      shrinkWrap: true,
+                      children: snapshot.data!.map((recipe) {
+                        return Center(
+                          child: Card(
+                            // Add gray colour to selected recipe
+                            color: selectedRecipe == recipe.id
+                                ? Colors.white70
+                                : Colors.white,
+                            // Each recipe
+                            child: ListTile(
+                              title: Text(recipe.name),
+                              onTap: () {
+                                // Tap to select recipe to edit or remove
+                                setState(() {
+                                  // TODO: Here, switch screen to recipe
+                                  //textController.text = recipe.name;
+                                  selectedRecipe = recipe.id;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            RecipeViewer(recipe: recipe)),
+                                  ).then(refresh);
+                                });
+                              },
+                            ),
+                          ),
                         );
+                      }).toList(),
+                    );
+                  }
                 }),
           ],
         ),

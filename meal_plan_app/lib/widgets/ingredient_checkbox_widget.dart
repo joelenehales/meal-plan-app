@@ -30,8 +30,7 @@ class _IngredientCheckboxWidgetState extends State<IngredientCheckboxWidget> {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('No ingredients to display'));
         }
-        return ListView(
-          shrinkWrap: true,
+        return Column(
           children: snapshot.data!.map((ingredient) {
             return CheckboxListTile(
               title: Text(ingredient.name),

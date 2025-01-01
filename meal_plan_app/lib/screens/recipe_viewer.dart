@@ -114,13 +114,19 @@ class _RecipeViewerState extends State<RecipeViewer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            recipeNameWidget(), // TODO: Add rename option here
-            ingredientsWidget(),
-            Row(
+      // TODO: Add app bar
+
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Padding(padding: const EdgeInsets.all(16.0), child: recipeNameWidget()
+              // TODO: Add rename option here
+              ),
+          Expanded(child: SingleChildScrollView(child: ingredientsWidget())),
+          Padding(
+            // Keep buttons fixed at bottom
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FloatingActionButton(
@@ -130,7 +136,9 @@ class _RecipeViewerState extends State<RecipeViewer> {
                     Navigator.pop(context); // Return to recipe list
                   },
                 ),
+                const SizedBox(width: 20), // Spacing
                 getEditButtonWidget(),
+                const SizedBox(width: 20), // Spacing
                 FloatingActionButton(
                   tooltip: 'Delete Recipe',
                   child: const Icon(Icons.delete_outlined),
@@ -144,8 +152,8 @@ class _RecipeViewerState extends State<RecipeViewer> {
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

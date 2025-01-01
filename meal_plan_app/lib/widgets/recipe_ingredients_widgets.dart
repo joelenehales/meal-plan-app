@@ -29,12 +29,9 @@ class _RecipeIngredientsWidgetState extends State<RecipeIngredientsWidget> {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('No ingredients to display'));
         }
-        return ListView(
-          shrinkWrap: true,
+        return Column(
           children: snapshot.data!.map((ingredient) {
-            return ListTile(
-              title: Text(ingredient.name),
-            );
+            return Text(ingredient.name);
           }).toList(),
         );
       },
