@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:meal_plan_app/objects/ingredient.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
 import 'package:meal_plan_app/database_helper.dart';
+import 'package:meal_plan_app/widgets/ingredient_checkbox_widget.dart';
 
 class NewRecipePage extends StatefulWidget {
   const NewRecipePage({super.key});
@@ -15,6 +16,21 @@ class _NewRecipePageState extends State<NewRecipePage> {
   bool isChecked = false;
   List<int> selectedIngredientIds = [];
   final textController = TextEditingController();
+
+  // TODO: Redundant function in recipe_viewer.dart. Move elsewhere (ex. make a
+  // "for all" version)
+  Widget ingredientsCheckboxWidget() {
+    List<Widget> widgets = [];
+
+    for (var ingredientType in IngredientType.values) {
+      widgets.add(ListTile(
+          leading: ingredientType.icon, title: Text(ingredientType.name)));
+      widgets.add(IngredientCheckboxWidget(
+          selectedIngredientIds: selectedIngredientIds,
+          ingredientType: ingredientType));
+    }
+    return Column(children: widgets);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,35 +45,13 @@ class _NewRecipePageState extends State<NewRecipePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('Enter Recipe Name'),
-            TextField(controller: textController),
-            FutureBuilder<List<Ingredient>>(
-                future: DatabaseHelper.instance.getIngredients(),
-                builder: (BuildContext context,
-                    AsyncSnapshot<List<Ingredient>> snapshot) {
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Center(child: Text('No Ingredients to Display'));
-                  }
-                  return ListView(
-                    shrinkWrap: true,
-                    children: snapshot.data!.map((ingredient) {
-                      // Display each ingredient with a checkbox
-                      return CheckboxListTile(
-                        title: Text(ingredient.name),
-                        value: selectedIngredientIds.contains(ingredient.id),
-                        onChanged: (bool? value) {
-                          setState(() {
-                            if (value!) {
-                              selectedIngredientIds.add(ingredient.id);
-                            } else {
-                              selectedIngredientIds.remove(ingredient.id);
-                            }
-                          });
-                        },
-                      );
-                    }).toList(),
-                  );
-                }),
+            TextField(
+                controller: textController,
+                decoration: const InputDecoration(
+                    labelText: 'Recipe Name',
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    hintText: 'New Recipe')),
+            ingredientsCheckboxWidget(),
           ],
         ),
       ),

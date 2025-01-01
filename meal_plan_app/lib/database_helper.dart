@@ -132,6 +132,17 @@ class DatabaseHelper {
     return ingredients;
   }
 
+  // Return all ingredients of a certain type
+  Future<List<Ingredient>> getIngredientByType(IngredientType type) async {
+    Database db = await instance.database;
+    var ingredientsQuery = await db.query('ingredients',
+        where: 'type = ?', whereArgs: [type.name], orderBy: 'name');
+    List<Ingredient> ingredients = ingredientsQuery.isNotEmpty
+        ? ingredientsQuery.map((c) => Ingredient.fromMap(c)).toList()
+        : [];
+    return ingredients;
+  }
+
   // Queries the database for the ingredients in a recipe
   Future<List<Ingredient>> getRecipeIngredients(int recipeId) async {
     Database db = await instance.database;
@@ -141,6 +152,22 @@ class DatabaseHelper {
         WHERE recipe_id = ?
       );
       ''', [recipeId]);
+    List<Ingredient> ingredientList = ingredientQuery.isNotEmpty
+        ? ingredientQuery.map((c) => Ingredient.fromMap(c)).toList()
+        : [];
+    return ingredientList;
+  }
+
+  // Queries the database for the ingredients in a recipe of a certain type
+  Future<List<Ingredient>> getRecipeIngredientsByType(
+      int recipeId, IngredientType type) async {
+    Database db = await instance.database;
+    var ingredientQuery = await db.rawQuery('''
+      SELECT * FROM ingredients WHERE type = ? AND id IN (
+        SELECT ingredient_id FROM recipeIngredients 
+        WHERE recipe_id = ?
+      );
+      ''', [type.name, recipeId]);
     List<Ingredient> ingredientList = ingredientQuery.isNotEmpty
         ? ingredientQuery.map((c) => Ingredient.fromMap(c)).toList()
         : [];
@@ -188,5 +215,19 @@ class DatabaseHelper {
     Database db = await instance.database;
     return await db.update('recipes', recipe.toMap(),
         where: 'id = ?', whereArgs: [recipe.id]);
+  }
+
+  // Edit recipe ingredients
+  Future<void> editRecipeIngredients(
+      int recipeId, List<int> ingredientIds) async {
+    Database db = await instance.database;
+
+    await db.delete('recipeIngredients',
+        where: 'recipe_id = ?', whereArgs: [recipeId]);
+
+    for (var ingredientId in ingredientIds) {
+      await db.insert('recipeIngredients',
+          {'recipe_id': recipeId, 'ingredient_id': ingredientId});
+    }
   }
 }

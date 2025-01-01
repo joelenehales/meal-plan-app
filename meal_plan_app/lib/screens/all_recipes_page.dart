@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 
-import 'package:meal_plan_app/objects/ingredient.dart';
+import 'recipe_viewer.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
 import 'package:meal_plan_app/database_helper.dart';
 
@@ -16,6 +17,12 @@ class _RecipeListPageState extends State<RecipeListPage> {
   int? selectedRecipe;
   final textController = TextEditingController();
 
+  // Reload recipe list by refreshing the state
+  // Used when returning after editing a recipe, so the changes show
+  FutureOr refresh(dynamic value) {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,8 +36,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-                'Enter Recipe Name'), // TODO: Make this into a search bar
+            const Text('Search Recipe'), // TODO: Implement search
             TextField(controller: textController),
             // Displays all recipes
             FutureBuilder<List<Recipe>>(
@@ -54,49 +60,26 @@ class _RecipeListPageState extends State<RecipeListPage> {
                                     : Colors.white,
                                 // Each recipe
                                 child: ListTile(
-                                    title: Text(recipe.name),
-                                    // List the recipe's ingredients
-                                    subtitle: Column(
-                                      children: <Widget>[
-                                        FutureBuilder<List<Ingredient>>(
-                                            future: DatabaseHelper.instance
-                                                .getRecipeIngredients(
-                                                    recipe.id),
-                                            builder: (BuildContext context,
-                                                AsyncSnapshot<List<Ingredient>>
-                                                    snapshot) {
-                                              if (!snapshot.hasData ||
-                                                  snapshot.data!.isEmpty) {
-                                                return Center(
-                                                    child:
-                                                        Text('No Ingredients'));
-                                              }
-                                              return ListView(
-                                                shrinkWrap: true,
-                                                children: snapshot.data!
-                                                    .map((ingredient) {
-                                                  return Center(
-                                                      child: ListTile(
-                                                          title: Text(ingredient
-                                                              .name)));
-                                                }).toList(),
-                                              );
-                                            }),
-                                      ],
-                                    ),
-                                    onTap: () {
-                                      // Tap to select recipe to edit or remove
-                                      setState(() {
-                                        textController.text = recipe.name;
-                                        selectedRecipe = recipe.id;
-                                      });
-                                    },
-                                    onLongPress: () {
-                                      // Press and hold to clear selected recipe
-                                      setState(() {
-                                        selectedRecipe = null;
-                                      });
-                                    }),
+                                  title: Text(recipe.name),
+                                  // List the recipe's ingredients
+                                  subtitle: Column(
+                                    children: <Widget>[],
+                                  ),
+                                  onTap: () {
+                                    // Tap to select recipe to edit or remove
+                                    setState(() {
+                                      // TODO: Here, switch screen to recipe
+                                      //textController.text = recipe.name;
+                                      selectedRecipe = recipe.id;
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                RecipeViewer(recipe: recipe)),
+                                      ).then(refresh);
+                                    });
+                                  },
+                                ),
                               ),
                             );
                           }).toList(),
@@ -119,19 +102,6 @@ class _RecipeListPageState extends State<RecipeListPage> {
                   setState(() {
                     DatabaseHelper.instance.renameRecipe(
                         Recipe(id: selectedRecipe!, name: textController.text));
-                  });
-                }
-              },
-            ),
-            FloatingActionButton(
-              tooltip: 'Delete Selected Recipe',
-              child: const Icon(Icons.delete_outlined),
-              onPressed: () async {
-                // If recipe is selected, remove it
-                if (selectedRecipe != null) {
-                  setState(() {
-                    DatabaseHelper.instance.removeRecipe(selectedRecipe!);
-                    textController.text = "";
                   });
                 }
               },

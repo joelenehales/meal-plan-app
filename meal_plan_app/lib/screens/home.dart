@@ -7,7 +7,7 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Text('Home Screen', style: TextStyle(fontSize: 24)),
+      child: Text('Welcome!', style: TextStyle(fontSize: 24)),
       // TODO: Add content to this page
     );
   }
