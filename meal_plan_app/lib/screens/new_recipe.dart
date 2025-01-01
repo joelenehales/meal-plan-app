@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:meal_plan_app/objects/ingredient.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
-import 'package:meal_plan_app/database_helper.dart';
+import 'package:meal_plan_app/utils/database_helper.dart';
+import 'package:meal_plan_app/utils/dialog_helpers.dart';
 import 'package:meal_plan_app/widgets/ingredient_checkbox_widget.dart';
 
 class NewRecipePage extends StatefulWidget {
@@ -16,26 +17,6 @@ class _NewRecipePageState extends State<NewRecipePage> {
   bool isChecked = false;
   List<int> selectedIngredientIds = [];
   final textController = TextEditingController();
-
-  void showErrorDialog(String message, BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Error"),
-          content: Text(message),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   // TODO: Redundant function in recipe_viewer.dart. Move elsewhere (ex. make a
   // "for all" version)

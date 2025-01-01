@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:meal_plan_app/database_helper.dart';
+import 'package:meal_plan_app/utils/database_helper.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
 import 'package:meal_plan_app/objects/ingredient.dart';
 import 'package:meal_plan_app/widgets/ingredient_checkbox_widget.dart';

@@ -4,7 +4,7 @@ import 'dart:async';
 import 'recipe_viewer.dart';
 import 'new_recipe.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
-import 'package:meal_plan_app/database_helper.dart';
+import 'package:meal_plan_app/utils/database_helper.dart';
 
 // Displays all recipes
 class RecipeListPage extends StatefulWidget {

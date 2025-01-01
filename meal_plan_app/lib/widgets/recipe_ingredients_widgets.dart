@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:meal_plan_app/database_helper.dart';
+import 'package:meal_plan_app/utils/database_helper.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
 import 'package:meal_plan_app/objects/ingredient.dart';
 
