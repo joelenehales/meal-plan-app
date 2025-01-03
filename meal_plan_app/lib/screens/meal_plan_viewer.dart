@@ -5,6 +5,7 @@ import 'package:meal_plan_app/objects/meal_plan.dart';
 import 'package:meal_plan_app/utils/database_helper.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
 import 'package:meal_plan_app/widgets/meal_plan_recipes_widget.dart';
+import 'package:meal_plan_app/widgets/meal_plan_ingredients_widget.dart';
 import 'package:meal_plan_app/widgets/recipe_checkbox_widget.dart';
 
 // Displays a single recipe with its ingredients
@@ -55,12 +56,13 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
     Widget nameWidget = editMode
         ? TextField(
             controller: textController,
+            style: const TextStyle(fontSize: 24),
             decoration: InputDecoration(
                 labelText: 'Meal Plan Name',
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 hintText: currentMealPlanName),
           )
-        : Text(currentMealPlanName);
+        : Text(currentMealPlanName, style: const TextStyle(fontSize: 24));
     return nameWidget;
   }
 
@@ -100,6 +102,18 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
     return recipeWidget;
   }
 
+  // Returns a list of all ingredients in all recipes in the meal plan
+  // TODO: Add ingredients occurrences
+  Widget ingredientsWidget() {
+    Widget ingredientWidget = editMode
+        ? MealPlanIngredientsWidget(
+            mealPlan: widget.mealPlan) // TODO: Handle edit mode differently
+        : MealPlanIngredientsWidget(mealPlan: widget.mealPlan);
+
+    return ingredientWidget;
+  }
+  // TODO: Separate by type
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,7 +128,14 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
         children: <Widget>[
           Padding(
               padding: const EdgeInsets.all(16.0), child: mealPlanNameWidget()),
-          Expanded(child: SingleChildScrollView(child: recipesWidget())),
+          Expanded(
+              child: SingleChildScrollView(
+                  child: Column(children: <Widget>[
+            const Text('Recipes', style: TextStyle(fontSize: 20)),
+            recipesWidget(),
+            const Text('Ingredients', style: TextStyle(fontSize: 20)),
+            ingredientsWidget()
+          ]))),
           Padding(
             // Keep buttons fixed at bottom
             padding: const EdgeInsets.all(16.0),

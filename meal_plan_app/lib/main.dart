@@ -66,7 +66,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
-            label: 'View All Recipes',
+            label: 'Manage Recipes',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -74,7 +74,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
-            label: 'View Meal Plans',
+            label: 'Meal Plans',
           ),
         ],
         currentIndex: _selectedIndex,

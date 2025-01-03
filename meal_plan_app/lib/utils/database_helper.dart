@@ -261,6 +261,26 @@ class DatabaseHelper {
     return recipeList;
   }
 
+  // Queries the database for a list of all ingredients in all the recipes in a
+  // meal plan
+  Future<List<Ingredient>> getMealPlanIngredients(int mealPlanId) async {
+    Database db = await instance.database;
+    var ingredientsQuery = await db.rawQuery('''
+      SELECT * FROM ingredients WHERE id IN (
+        SELECT ingredients.id FROM (
+          (SELECT recipe_id FROM mealPlanRecipes WHERE meal_plan_id = ?) mealPlan
+          INNER JOIN recipeIngredients ON mealPlan.recipe_id = recipeIngredients.recipe_id
+          INNER JOIN ingredients ON  
+          ingredients.id = recipeIngredients.ingredient_id
+        )
+      );
+      ''', [mealPlanId]);
+    List<Ingredient> ingredientsList = ingredientsQuery.isNotEmpty
+        ? ingredientsQuery.map((c) => Ingredient.fromMap(c)).toList()
+        : [];
+    return ingredientsList;
+  }
+
   // Adds recipe and its ingredients to databae
   Future<void> addRecipe(Recipe recipe, List<int> ingredientIds) async {
     Database db = await instance.database;
