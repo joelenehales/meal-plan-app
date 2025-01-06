@@ -30,7 +30,7 @@ class _RecipeCheckboxWidgetState extends State<RecipeCheckboxWidget> {
         return Column(
           children: snapshot.data!.map((recipe) {
             return CheckboxListTile(
-              title: Text(recipe.name),
+              title: Text(recipe.name, style: const TextStyle(fontSize: 16.0)),
               value: widget.selectedRecipeIds.contains(recipe.id),
               onChanged: (bool? value) {
                 setState(() {

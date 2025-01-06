@@ -109,7 +109,6 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
         ? MealPlanIngredientsWidget(
             mealPlan: widget.mealPlan) // TODO: Handle edit mode differently
         : MealPlanIngredientsWidget(mealPlan: widget.mealPlan);
-
     return ingredientWidget;
   }
   // TODO: Separate by type

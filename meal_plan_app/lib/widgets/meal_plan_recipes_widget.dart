@@ -25,7 +25,7 @@ class _MealPlanRecipesWidgetState extends State<MealPlanRecipesWidget> {
         }
         return Column(
           children: snapshot.data!.map((recipe) {
-            return Text(recipe.name);
+            return Text(recipe.name, style: const TextStyle(fontSize: 16.0));
             // TODO: Include ingredients
           }).toList(),
         );
