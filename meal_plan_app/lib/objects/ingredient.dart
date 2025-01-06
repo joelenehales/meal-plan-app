@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-enum IngredientType { produce, dairy, meat, seafood, bakery, pantry }
+enum IngredientType { produce, dairy, meat, seafood, bakery, pantry, other }
 
 extension IngredientTypeExtension on IngredientType {
   // Get ingredient type name
@@ -19,6 +19,8 @@ extension IngredientTypeExtension on IngredientType {
         return 'Bakery';
       case IngredientType.pantry:
         return 'Pantry';
+      case IngredientType.other:
+        return 'Other';
       default:
         return 'Unknown';
     }
@@ -39,32 +41,50 @@ extension IngredientTypeExtension on IngredientType {
         return const Icon(FontAwesomeIcons.breadSlice);
       case IngredientType.pantry:
         return const Icon(FontAwesomeIcons.jarWheat);
+      case IngredientType.other:
+        return const Icon(Icons.question_mark);
       default:
         return const Icon(Icons.question_mark);
     }
   }
 }
 
+const int DEFAULT_OCCURRENCES = 0;
+
 // Represents a single ingredient
 class Ingredient {
   final int id;
   final String name;
   final IngredientType type;
+  final int occurrences;
 
-  Ingredient({required this.id, required this.name, required this.type});
+  Ingredient(
+      {required this.id,
+      required this.name,
+      required this.type,
+      this.occurrences = DEFAULT_OCCURRENCES});
 
   factory Ingredient.fromMap(Map<String, dynamic> json) => Ingredient(
       id: json['id'],
       name: json['name'],
       type: IngredientType.values
-          .firstWhere((e) => e.name == json['type']) // Convert string to enum
-      );
+          .firstWhere((e) => e.name == json['type']), // Convert string to enum
+      // Initialize with occurrences if it has one. Used for meal plans only
+      occurrences: json.containsKey('occurrences')
+          ? json['occurrences']
+          : DEFAULT_OCCURRENCES);
 
-  Map<String, dynamic> toMap() {
-    return {
+  // Does not include occurrences by default, for adding to ingredients database
+  Map<String, dynamic> toMap({bool includeOccurrences = false}) {
+    Map<String, dynamic> json = {
       'id': id,
       'name': name,
       'type': type.name // Convert enum to string
     };
+    if (includeOccurrences) {
+      json['occurrences'] = occurrences;
+    }
+
+    return json;
   }
 }

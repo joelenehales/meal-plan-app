@@ -261,19 +261,17 @@ class DatabaseHelper {
     return recipeList;
   }
 
-  // Queries the database for a list of all ingredients in all the recipes in a
-  // meal plan
+  // Queries the database for a list of all ingredients the meal plan
+  // Returns the ingredient including its occurrences stored as a class variable
   Future<List<Ingredient>> getMealPlanIngredients(int mealPlanId) async {
     Database db = await instance.database;
     var ingredientsQuery = await db.rawQuery('''
-      SELECT * FROM ingredients WHERE id IN (
-        SELECT ingredients.id FROM (
-          (SELECT recipe_id FROM mealPlanRecipes WHERE meal_plan_id = ?) mealPlan
-          INNER JOIN recipeIngredients ON mealPlan.recipe_id = recipeIngredients.recipe_id
-          INNER JOIN ingredients ON  
-          ingredients.id = recipeIngredients.ingredient_id
-        )
-      );
+      SELECT ingredients.id AS id, ingredients.name AS name, ingredients.type AS type, COUNT(recipeIngredients.recipe_id) AS occurrences FROM (
+        (SELECT recipe_id FROM mealPlanRecipes WHERE meal_plan_id = ?) mealPlan
+        INNER JOIN recipeIngredients ON mealPlan.recipe_id = recipeIngredients.recipe_id
+        INNER JOIN ingredients ON  
+        ingredients.id = recipeIngredients.ingredient_id
+      ) GROUP BY ingredients.id;
       ''', [mealPlanId]);
     List<Ingredient> ingredientsList = ingredientsQuery.isNotEmpty
         ? ingredientsQuery.map((c) => Ingredient.fromMap(c)).toList()
