@@ -6,6 +6,7 @@ import 'package:meal_plan_app/objects/ingredient.dart';
 
 // Helper class creates a widget that displays a list of ingredients of a
 // certain type in a recipe.
+// TODO: Include option to display with headers, instead of isngle type
 class RecipeIngredientsWidget extends StatefulWidget {
   const RecipeIngredientsWidget(
       {super.key, required this.recipe, required this.ingredientType});

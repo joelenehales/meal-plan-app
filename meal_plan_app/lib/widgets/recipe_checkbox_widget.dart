@@ -17,6 +17,66 @@ class RecipeCheckboxWidget extends StatefulWidget {
 }
 
 class _RecipeCheckboxWidgetState extends State<RecipeCheckboxWidget> {
+  // Returns the colour to display recipe with based on the number of common ingredients
+  // TODO: Partially copied from ingredients widget, refactor
+  Color getCountColor(int count) {
+    if (count > 1) {
+      return Colors.green;
+    } else if (count == 1) {
+      return Colors.orange;
+    } else {
+      return Colors.red;
+    }
+  }
+
+  // Displays a single recipe, a checkbox, and the number of ingredients it
+  // shares with the other selected recipes
+  Widget recipeCheckboxWidget(Recipe recipe) {
+    const double fontSize = 16.0;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Expanded(
+          flex: 3,
+          child: CheckboxListTile(
+            title: Text(recipe.name, style: const TextStyle(fontSize: 16.0)),
+            value: widget.selectedRecipeIds.contains(recipe.id),
+            onChanged: (bool? value) {
+              setState(() {
+                if (value!) {
+                  widget.selectedRecipeIds.add(recipe.id);
+                } else {
+                  widget.selectedRecipeIds.remove(recipe.id);
+                }
+              });
+            },
+          ),
+        ),
+        Expanded(
+          flex: 1,
+          child: FutureBuilder<int>(
+              future: DatabaseHelper.instance.getCommonIngredientCount(
+                  recipe.id, widget.selectedRecipeIds),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  int commonIngredientCount = snapshot.data!;
+                  return Text(
+                    commonIngredientCount.toString(),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: fontSize,
+                        color: getCountColor(commonIngredientCount)),
+                  );
+                } else {
+                  return const Text(
+                      "Error Occurred"); // TODO: Format this better?
+                }
+              }),
+        )
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Recipe>>(
@@ -29,19 +89,7 @@ class _RecipeCheckboxWidgetState extends State<RecipeCheckboxWidget> {
         }
         return Column(
           children: snapshot.data!.map((recipe) {
-            return CheckboxListTile(
-              title: Text(recipe.name, style: const TextStyle(fontSize: 16.0)),
-              value: widget.selectedRecipeIds.contains(recipe.id),
-              onChanged: (bool? value) {
-                setState(() {
-                  if (value!) {
-                    widget.selectedRecipeIds.add(recipe.id);
-                  } else {
-                    widget.selectedRecipeIds.remove(recipe.id);
-                  }
-                });
-              },
-            );
+            return recipeCheckboxWidget(recipe);
           }).toList(),
         );
       },

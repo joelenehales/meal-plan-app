@@ -279,6 +279,28 @@ class DatabaseHelper {
     return ingredientsList;
   }
 
+  // Counts the number of ingredients the recipe shares with the list of recipes
+  Future<int> getCommonIngredientCount(
+      int recipeId, List<int> recipeIds) async {
+    Database db = await instance.database;
+    String placeholders = List.filled(recipeIds.length, '?').join(', ');
+
+    String query = '''
+      SELECT COUNT(DISTINCT recipe.ingredient_id) AS common_ingredient_count FROM
+      (SELECT ingredient_id FROM recipeIngredients WHERE recipe_id = ?) recipe INNER JOIN
+      (SELECT DISTINCT ingredient_id FROM recipeIngredients WHERE recipe_id IN ($placeholders)) recipeList
+      ON recipe.ingredient_id = recipeList.ingredient_id;
+    ''';
+
+    List<Map<String, dynamic>> commonIngredientQuery =
+        await db.rawQuery(query, [recipeId, ...recipeIds]);
+
+    int commonIngredientCount =
+        commonIngredientQuery.first['common_ingredient_count'] as int? ??
+            0; // If null, set to 0
+    return commonIngredientCount;
+  }
+
   // Adds recipe and its ingredients to databae
   Future<void> addRecipe(Recipe recipe, List<int> ingredientIds) async {
     Database db = await instance.database;
