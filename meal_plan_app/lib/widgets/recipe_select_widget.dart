@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:meal_plan_app/objects/ingredient.dart';
 
@@ -57,7 +59,7 @@ class _RecipeSelectWidgetState extends State<RecipeSelectWidget> {
 
   // Displays a single recipe, a checkbox, and the number of ingredients it
   // shares with the other selected recipes
-  Widget RecipeSelectWidget(Recipe recipe) {
+  Widget recipeCardWidget(Recipe recipe) {
     const double fontSize = 16.0;
     bool recipeIsSelected = widget.selectedRecipeIds.contains(recipe.id);
     return Card(
@@ -111,12 +113,22 @@ class _RecipeSelectWidgetState extends State<RecipeSelectWidget> {
           return const Center(
               child: Text('No recipes to display. Try adding one!'));
           // TODO: Add button here to add a new recipe
+        } else {
+          List<Recipe> allRecipes = snapshot.data!;
+          List<Widget> selectedRecipeCards = [const Text("Selected")];
+          List<Widget> unselectedRecipeCards = [const Text("All Recipes")];
+          for (var recipe in allRecipes) {
+            bool recipeIsSelected =
+                widget.selectedRecipeIds.contains(recipe.id);
+            if (recipeIsSelected) {
+              selectedRecipeCards.add(recipeCardWidget(recipe));
+            } else {
+              unselectedRecipeCards.add(recipeCardWidget(recipe));
+            }
+          }
+          return Column(
+              children: [...selectedRecipeCards, ...unselectedRecipeCards]);
         }
-        return Column(
-          children: snapshot.data!.map((recipe) {
-            return RecipeSelectWidget(recipe);
-          }).toList(),
-        );
       },
     );
   }
