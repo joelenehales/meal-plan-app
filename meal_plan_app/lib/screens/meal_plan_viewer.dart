@@ -6,7 +6,7 @@ import 'package:meal_plan_app/utils/database_helper.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
 import 'package:meal_plan_app/widgets/meal_plan_recipes_widget.dart';
 import 'package:meal_plan_app/widgets/meal_plan_ingredients_widget.dart';
-import 'package:meal_plan_app/widgets/recipe_checkbox_widget.dart';
+import 'package:meal_plan_app/widgets/recipe_select_widget.dart';
 
 // Displays a single recipe with its ingredients
 class MealPlanViewer extends StatefulWidget {
@@ -98,7 +98,7 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
   // Returns list of recipes in the meal plan, or form to edit meal plans
   Widget recipesWidget() {
     Widget recipeWidget = editMode
-        ? RecipeCheckboxWidget(selectedRecipeIds: selectedRecipeIds)
+        ? RecipeSelectWidget(selectedRecipeIds: selectedRecipeIds)
         : MealPlanRecipesWidget(mealPlan: widget.mealPlan);
 
     return recipeWidget;

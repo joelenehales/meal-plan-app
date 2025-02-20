@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:meal_plan_app/objects/meal_plan.dart';
 import 'package:meal_plan_app/utils/database_helper.dart';
 import 'package:meal_plan_app/utils/dialog_helpers.dart';
-import 'package:meal_plan_app/widgets/recipe_checkbox_widget.dart';
+import 'package:meal_plan_app/widgets/recipe_select_widget.dart';
 
 // TODO: Add ingredients thing
 
@@ -41,7 +41,7 @@ class _CreateMealPlanScreenState extends State<CreateMealPlanScreen> {
                       hintText: 'New Meal Plan'))),
           Expanded(
               child: SingleChildScrollView(
-                  child: RecipeCheckboxWidget(
+                  child: RecipeSelectWidget(
                       selectedRecipeIds: selectedRecipeIds))),
           Padding(
             padding: const EdgeInsets.all(16.0),

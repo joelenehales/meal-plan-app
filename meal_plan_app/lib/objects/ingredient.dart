@@ -57,7 +57,7 @@ class Ingredient {
   final String name;
   final IngredientType type;
   final int
-      occurrences; // TODO: Use RecipeCheckBoxWidget to refactor things so that this doesn't need to be stored as a class variable?
+      occurrences; // TODO: Use RecipeSelectWidget to refactor things so that this doesn't need to be stored as a class variable?
 
   Ingredient(
       {required this.id,

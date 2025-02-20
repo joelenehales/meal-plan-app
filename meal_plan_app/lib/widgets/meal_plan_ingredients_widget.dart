@@ -48,7 +48,7 @@ class _MealPlanIngredientsWidgetState extends State<MealPlanIngredientsWidget> {
               style: TextStyle(
                   fontSize: fontSize,
                   // TODO: Refactor this to use a FutureBuilder, like the
-                  // RecipeCheckboxWidget
+                  // RecipeSelectWidget
                   color: getOccurrencesColor(ingredient.occurrences)),
             )),
       ],
