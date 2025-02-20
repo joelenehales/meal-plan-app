@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 import 'package:meal_plan_app/objects/ingredient.dart';
 
@@ -104,6 +102,32 @@ class _RecipeSelectWidgetState extends State<RecipeSelectWidget> {
     ));
   }
 
+  // Create the widget of a group of recipe cards. Used for either the selected
+  // recipes or all recipes
+  List<Widget> recipeCardGroup(
+      String title, List<Recipe> recipes, String? emptyMessage) {
+    List<Widget> recipeCards = [];
+    if (recipes.isEmpty) {
+      // No recipes provided
+      if (emptyMessage != null) {
+        // Display message, if provided
+        recipeCards.add(Text(emptyMessage));
+      } else {
+        recipeCards.add(const SizedBox.shrink()); // Empty, sizeless widget
+      }
+    } else {
+      for (var recipe in recipes) {
+        // Add card for each recipe
+        recipeCards.add(recipeCardWidget(recipe));
+      }
+    }
+
+    return [
+      Text(title),
+      SingleChildScrollView(child: Column(children: recipeCards))
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Recipe>>(
@@ -115,19 +139,27 @@ class _RecipeSelectWidgetState extends State<RecipeSelectWidget> {
           // TODO: Add button here to add a new recipe
         } else {
           List<Recipe> allRecipes = snapshot.data!;
-          List<Widget> selectedRecipeCards = [const Text("Selected")];
-          List<Widget> unselectedRecipeCards = [const Text("All Recipes")];
-          for (var recipe in allRecipes) {
-            bool recipeIsSelected =
-                widget.selectedRecipeIds.contains(recipe.id);
-            if (recipeIsSelected) {
-              selectedRecipeCards.add(recipeCardWidget(recipe));
-            } else {
-              unselectedRecipeCards.add(recipeCardWidget(recipe));
-            }
-          }
-          return Column(
-              children: [...selectedRecipeCards, ...unselectedRecipeCards]);
+
+          // Filter selected vs. unselected recipes
+          // TODO: may be worthwhile to refactor from using recipe ID list to
+          // just recipe references
+          List<Recipe> selectedRecipes = allRecipes
+              .where((recipe) => widget.selectedRecipeIds.contains(recipe.id))
+              .toList();
+          List<Recipe> unselectedRecipes = allRecipes
+              .where((recipe) =>
+                  widget.selectedRecipeIds.contains(recipe.id) == false)
+              .toList();
+
+          List<Widget> selectedRecipeCards = recipeCardGroup(
+              "Selected Recipes", selectedRecipes, "No recipes selected.");
+          List<Widget> unselectedRecipeCards = recipeCardGroup("All Recipes",
+              unselectedRecipes, "No recipes to display. Try adding one!");
+          return Column(children: [
+            ...selectedRecipeCards,
+            const SizedBox(height: 20),
+            ...unselectedRecipeCards
+          ]);
         }
       },
     );
