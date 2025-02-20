@@ -71,6 +71,7 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
     Widget buttonWidget = editMode
         ? FloatingActionButton(
             tooltip: 'Save',
+            heroTag: "save_meal_plan_edits",
             child: const Icon(Icons.save),
             onPressed: () async {
               DatabaseHelper.instance
@@ -84,6 +85,7 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
             })
         : FloatingActionButton(
             tooltip: 'Edit Meal Plan',
+            heroTag: "edit_meal_plan",
             child: const Icon(Icons.edit),
             onPressed: () async {
               setState(() {
@@ -142,6 +144,7 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FloatingActionButton(
+                  heroTag: "back_meal_plan_viewer",
                   tooltip: 'Back',
                   child: const Icon(Icons.arrow_back),
                   onPressed: () async {
@@ -153,6 +156,7 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
                 const SizedBox(width: 20), // Spacing
                 FloatingActionButton(
                   tooltip: 'Delete Meal Plan',
+                  heroTag: "delete_meal_plan",
                   child: const Icon(Icons.delete_outlined),
                   onPressed: () async {
                     // TODO: Add confirmation to delete

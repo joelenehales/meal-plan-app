@@ -19,10 +19,10 @@ class MealPlanIngredientsWidget extends StatefulWidget {
 
 class _MealPlanIngredientsWidgetState extends State<MealPlanIngredientsWidget> {
   // Returns the colour to display recipe with based on occurrences in meal plan
-  Color getOccurrencesColor(Ingredient ingredient) {
-    if (ingredient.occurrences > 1) {
+  Color getOccurrencesColor(int occurrences) {
+    if (occurrences > 1) {
       return Colors.green;
-    } else if (ingredient.occurrences == 1) {
+    } else if (occurrences == 1) {
       return Colors.orange;
     } else {
       return Colors.red;
@@ -46,7 +46,10 @@ class _MealPlanIngredientsWidgetState extends State<MealPlanIngredientsWidget> {
               ingredient.occurrences.toString(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                  fontSize: fontSize, color: getOccurrencesColor(ingredient)),
+                  fontSize: fontSize,
+                  // TODO: Refactor this to use a FutureBuilder, like the
+                  // RecipeCheckboxWidget
+                  color: getOccurrencesColor(ingredient.occurrences)),
             )),
       ],
     );

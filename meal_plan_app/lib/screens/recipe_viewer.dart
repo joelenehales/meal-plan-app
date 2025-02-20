@@ -69,6 +69,7 @@ class _RecipeViewerState extends State<RecipeViewer> {
     Widget buttonWidget = editMode
         ? FloatingActionButton(
             tooltip: 'Save',
+            heroTag: "save_recipe_edits",
             child: const Icon(Icons.save),
             onPressed: () async {
               DatabaseHelper.instance.editRecipeIngredients(
@@ -82,6 +83,7 @@ class _RecipeViewerState extends State<RecipeViewer> {
             })
         : FloatingActionButton(
             tooltip: 'Edit Recipe',
+            heroTag: "edit_recipe_go",
             child: const Icon(Icons.edit),
             onPressed: () async {
               setState(() {
@@ -140,6 +142,7 @@ class _RecipeViewerState extends State<RecipeViewer> {
               children: [
                 FloatingActionButton(
                   tooltip: 'Back',
+                  heroTag: "recipe_viewer_back",
                   child: const Icon(Icons.arrow_back),
                   onPressed: () async {
                     Navigator.pop(context); // Return to recipe list
@@ -150,6 +153,7 @@ class _RecipeViewerState extends State<RecipeViewer> {
                 const SizedBox(width: 20), // Spacing
                 FloatingActionButton(
                   tooltip: 'Delete Recipe',
+                  heroTag: "delete_recipe",
                   child: const Icon(Icons.delete_outlined),
                   onPressed: () async {
                     // TODO: Add confirmation to delete

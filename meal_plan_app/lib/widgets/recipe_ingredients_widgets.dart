@@ -19,6 +19,8 @@ class RecipeIngredientsWidget extends StatefulWidget {
       _RecipeIngredientsWidgetState();
 }
 
+// TODO: Consider refactoring this to make more general? Combine with the
+// simillar widget created in recipe_checkbox_widget
 class _RecipeIngredientsWidgetState extends State<RecipeIngredientsWidget> {
   @override
   Widget build(BuildContext context) {

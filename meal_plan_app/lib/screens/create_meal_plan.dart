@@ -50,6 +50,7 @@ class _CreateMealPlanScreenState extends State<CreateMealPlanScreen> {
               children: [
                 FloatingActionButton(
                   tooltip: 'Save',
+                  heroTag: "save_meal_plan",
                   child: const Icon(Icons.save),
                   onPressed: () async {
                     String mealPlanName = textController.text;

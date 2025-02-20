@@ -64,6 +64,7 @@ class _NewRecipePageState extends State<NewRecipePage> {
               children: [
                 FloatingActionButton(
                   tooltip: 'Save',
+                  heroTag: "save_new_recipe",
                   child: const Icon(Icons.save),
                   onPressed: () async {
                     String recipeName = textController.text;

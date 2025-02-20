@@ -82,6 +82,7 @@ class _RecipeListPageState extends State<RecipeListPage> {
               children: [
                 FloatingActionButton(
                   tooltip: 'New Recipe',
+                  heroTag: "add_new_recipe",
                   child: const Icon(Icons.add),
                   onPressed: () async {
                     setState(() {

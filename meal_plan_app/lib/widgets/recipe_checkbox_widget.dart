@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:meal_plan_app/objects/ingredient.dart';
 
 import 'package:meal_plan_app/utils/database_helper.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
+import 'package:meal_plan_app/widgets/ingredient_checkbox_widget.dart';
+import 'package:meal_plan_app/widgets/recipe_ingredients_widgets.dart';
 
 // TODO: Need to add ingredients tracking
 
@@ -29,32 +32,44 @@ class _RecipeCheckboxWidgetState extends State<RecipeCheckboxWidget> {
     }
   }
 
+  // Displays the recipe's ingredients sorted by type. Skips types with no ingredients
+  List<Widget> recipeIngredientsWidget(Recipe recipe) {
+    List<Widget> widgetList = [];
+    for (var ingredientType in IngredientType.values) {
+      widgetList.add(FutureBuilder<List<Ingredient>>(
+          future: DatabaseHelper.instance
+              .getRecipeIngredientsByType(recipe.id, ingredientType),
+          builder:
+              (BuildContext context, AsyncSnapshot<List<Ingredient>> snapshot) {
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const SizedBox.shrink(); // Empty, sizeless widget
+            } else {
+              List<Widget> ingredientsWidget = snapshot.data!.map((ingredient) {
+                return Text(ingredient.name);
+              }).toList();
+              ingredientsWidget.insert(0, Text(ingredientType.name));
+              return Column(
+                children: ingredientsWidget,
+              );
+            }
+          }));
+    }
+    return widgetList;
+  }
+
   // Displays a single recipe, a checkbox, and the number of ingredients it
   // shares with the other selected recipes
   Widget recipeCheckboxWidget(Recipe recipe) {
     const double fontSize = 16.0;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          flex: 3,
-          child: CheckboxListTile(
-            title: Text(recipe.name, style: const TextStyle(fontSize: 16.0)),
-            value: widget.selectedRecipeIds.contains(recipe.id),
-            onChanged: (bool? value) {
-              setState(() {
-                if (value!) {
-                  widget.selectedRecipeIds.add(recipe.id);
-                } else {
-                  widget.selectedRecipeIds.remove(recipe.id);
-                }
-              });
-            },
-          ),
-        ),
-        Expanded(
-          flex: 1,
-          child: FutureBuilder<int>(
+    bool recipeIsSelected = widget.selectedRecipeIds.contains(recipe.id);
+    return Card(
+        child: ExpansionTile(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(recipe.name, style: const TextStyle(fontSize: fontSize)),
+          const SizedBox(width: 20), // Spacing
+          FutureBuilder<int>(
               future: DatabaseHelper.instance.getCommonIngredientCount(
                   recipe.id, widget.selectedRecipeIds),
               builder: (context, snapshot) {
@@ -72,9 +87,21 @@ class _RecipeCheckboxWidgetState extends State<RecipeCheckboxWidget> {
                       "Error Occurred"); // TODO: Format this better?
                 }
               }),
-        )
-      ],
-    );
+        ],
+      ),
+      leading: IconButton(
+          icon: Icon(recipeIsSelected ? Icons.remove : Icons.add),
+          onPressed: () {
+            setState(() {
+              if (!recipeIsSelected) {
+                widget.selectedRecipeIds.add(recipe.id);
+              } else {
+                widget.selectedRecipeIds.remove(recipe.id);
+              }
+            });
+          }),
+      children: recipeIngredientsWidget(recipe),
+    ));
   }
 
   @override

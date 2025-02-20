@@ -83,6 +83,7 @@ class _MealPlansScreenState extends State<MealPlansScreen> {
               children: [
                 FloatingActionButton(
                   tooltip: 'New Meal Plan',
+                  heroTag: "new_meal_plan_go",
                   child: const Icon(Icons.add),
                   onPressed: () async {
                     setState(() {
