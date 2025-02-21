@@ -107,13 +107,13 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
   // Returns a list of all ingredients in all recipes in the meal plan
   // TODO: Add ingredients occurrences
   Widget ingredientsWidget() {
-    Widget ingredientWidget = editMode
-        ? MealPlanIngredientsWidget(
-            mealPlan: widget.mealPlan) // TODO: Handle edit mode differently
-        : MealPlanIngredientsWidget(mealPlan: widget.mealPlan);
-    return ingredientWidget;
+    return !editMode
+        ? MealPlanIngredientsWidget.fromExistingMealPlan(
+            mealPlan: widget.mealPlan)
+        // If in edit mode, use the count in the currently selected recipes instead
+        : MealPlanIngredientsWidget.fromSelectedRecipes(
+            selectedRecipeIds: selectedRecipeIds);
   }
-  // TODO: Separate by type
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +135,7 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
             const Text('Recipes', style: TextStyle(fontSize: 20)),
             recipesWidget(),
             const Text('Ingredients', style: TextStyle(fontSize: 20)),
+            // TODO: Fix, this is not getting updated
             ingredientsWidget()
           ]))),
           Padding(

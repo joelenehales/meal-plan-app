@@ -7,10 +7,34 @@ import 'package:meal_plan_app/objects/ingredient.dart';
 // Helper class creates a widget that displays a list of ingredients in all
 // recipes in a meal plan
 // Includes count of occurrences of ingredient in meal plan
+// TODO: not sure if I like this named constructor method?
 class MealPlanIngredientsWidget extends StatefulWidget {
-  const MealPlanIngredientsWidget({super.key, required this.mealPlan});
+  // Default constructor
+  const MealPlanIngredientsWidget(
+      {super.key,
+      required this.mealPlan,
+      required this.selectedRecipeIds,
+      required this.useExistingMealPlan});
 
-  final MealPlan mealPlan;
+  // Use an existing meal plan
+  factory MealPlanIngredientsWidget.fromExistingMealPlan(
+      {Key? key, required MealPlan mealPlan}) {
+    return MealPlanIngredientsWidget(
+        mealPlan: mealPlan, selectedRecipeIds: null, useExistingMealPlan: true);
+  }
+
+  // Use a list of recipes (tentative meal plan)
+  factory MealPlanIngredientsWidget.fromSelectedRecipes(
+      {Key? key, required List<int> selectedRecipeIds}) {
+    return MealPlanIngredientsWidget(
+        mealPlan: null,
+        selectedRecipeIds: selectedRecipeIds,
+        useExistingMealPlan: false);
+  }
+
+  final MealPlan? mealPlan;
+  final List<int>? selectedRecipeIds;
+  final bool useExistingMealPlan; // Indicates which factory was used
 
   @override
   State<MealPlanIngredientsWidget> createState() =>
@@ -55,11 +79,21 @@ class _MealPlanIngredientsWidgetState extends State<MealPlanIngredientsWidget> {
     );
   }
 
+  // Search the database for the list of ingredients. Query is selected
+  // depending on whether an existing meal plan or list of selected recipes was
+  // used to create the object
+  Future<List<Ingredient>> getIngredientsList() {
+    Future<List<Ingredient>> ingredientsList = widget.useExistingMealPlan
+        ? DatabaseHelper.instance.getMealPlanIngredients(widget.mealPlan!.id)
+        : DatabaseHelper.instance
+            .ingredientOccurrenceCount(widget.selectedRecipeIds!);
+    return ingredientsList;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Ingredient>>(
-      future:
-          DatabaseHelper.instance.getMealPlanIngredients(widget.mealPlan.id),
+      future: getIngredientsList(),
       builder:
           (BuildContext context, AsyncSnapshot<List<Ingredient>> snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -72,5 +106,16 @@ class _MealPlanIngredientsWidgetState extends State<MealPlanIngredientsWidget> {
         );
       },
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant MealPlanIngredientsWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.useExistingMealPlan &&
+        !oldWidget.useExistingMealPlan &&
+        oldWidget.selectedRecipeIds!.length !=
+            widget.selectedRecipeIds!.length) {
+      setState(() {}); // Forces rebuild when recipe list changes
+    }
   }
 }
