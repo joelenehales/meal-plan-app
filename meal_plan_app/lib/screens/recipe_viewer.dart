@@ -94,7 +94,8 @@ class _RecipeViewerState extends State<RecipeViewer> {
   }
 
   // Returns list of ingredients in the recipe, or form to edit ingredients
-  Widget ingredientsWidget() {
+  // TODO: Add a widget that is for all types...?
+  Widget ingredientsListWidget() {
     List<Widget> widgets = [];
     for (var ingredientType in IngredientType.values) {
       if (editMode) {
@@ -107,10 +108,6 @@ class _RecipeViewerState extends State<RecipeViewer> {
                   ingredientType: ingredientType)
             ]));
       } else {
-        widgets.add(ListTile(
-          leading: ingredientType.icon,
-          title: Text(ingredientType.name),
-        ));
         widgets.add(RecipeIngredientsWidget(
             recipe: widget.recipe, ingredientType: ingredientType));
       }
@@ -133,7 +130,8 @@ class _RecipeViewerState extends State<RecipeViewer> {
         children: <Widget>[
           Padding(
               padding: const EdgeInsets.all(16.0), child: recipeNameWidget()),
-          Expanded(child: SingleChildScrollView(child: ingredientsWidget())),
+          Expanded(
+              child: SingleChildScrollView(child: ingredientsListWidget())),
           Padding(
             // Keep buttons fixed at bottom
             padding: const EdgeInsets.all(16.0),

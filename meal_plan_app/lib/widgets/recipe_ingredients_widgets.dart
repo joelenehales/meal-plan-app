@@ -25,19 +25,27 @@ class _RecipeIngredientsWidgetState extends State<RecipeIngredientsWidget> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Ingredient>>(
-      future: DatabaseHelper.instance
-          .getRecipeIngredientsByType(widget.recipe.id, widget.ingredientType),
-      builder:
-          (BuildContext context, AsyncSnapshot<List<Ingredient>> snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No ingredients to display'));
-        }
-        return Column(
-          children: snapshot.data!.map((ingredient) {
-            return Text(ingredient.name);
-          }).toList(),
-        );
-      },
-    );
+        future: DatabaseHelper.instance.getRecipeIngredientsByType(
+            widget.recipe.id, widget.ingredientType),
+        builder:
+            (BuildContext context, AsyncSnapshot<List<Ingredient>> snapshot) {
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            // No ingredients of the given type
+            return const SizedBox.shrink(); // Empty, sizeless widget
+          } else {
+            // Add each ingredient of the type
+            List<Widget> ingredientsWidget = snapshot.data!.map((ingredient) {
+              return Text(ingredient.name);
+            }).toList();
+            ListTile ingredientTypeLabel = ListTile(
+                // Add label with type
+                leading: widget.ingredientType.icon,
+                title: Text(widget.ingredientType.name));
+            // TODO: Add styling here
+            return Column(
+              children: [ingredientTypeLabel, ...ingredientsWidget],
+            );
+          }
+        });
   }
 }

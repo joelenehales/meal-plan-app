@@ -5,8 +5,6 @@ import 'package:meal_plan_app/utils/database_helper.dart';
 import 'package:meal_plan_app/utils/dialog_helpers.dart';
 import 'package:meal_plan_app/widgets/recipe_select_widget.dart';
 
-// TODO: Add ingredients thing
-
 class CreateMealPlanScreen extends StatefulWidget {
   const CreateMealPlanScreen({super.key});
 

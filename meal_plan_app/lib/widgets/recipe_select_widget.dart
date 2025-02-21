@@ -3,8 +3,7 @@ import 'package:meal_plan_app/objects/ingredient.dart';
 
 import 'package:meal_plan_app/utils/database_helper.dart';
 import 'package:meal_plan_app/objects/recipe.dart';
-
-// TODO: Need to add ingredients tracking
+import 'package:meal_plan_app/widgets/recipe_ingredients_widgets.dart';
 
 // Helper class creates a widget that displays a list of recipes with
 // checkboxes. Selected recipes are stored in a list by their ID.
@@ -31,26 +30,13 @@ class _RecipeSelectWidgetState extends State<RecipeSelectWidget> {
   }
 
   // Displays the recipe's ingredients sorted by type. Skips types with no ingredients
-  List<Widget> recipeIngredientsWidget(Recipe recipe) {
+  List<Widget> ingredientsListWidget(Recipe recipe) {
     List<Widget> widgetList = [];
     for (var ingredientType in IngredientType.values) {
-      widgetList.add(FutureBuilder<List<Ingredient>>(
-          future: DatabaseHelper.instance
-              .getRecipeIngredientsByType(recipe.id, ingredientType),
-          builder:
-              (BuildContext context, AsyncSnapshot<List<Ingredient>> snapshot) {
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const SizedBox.shrink(); // Empty, sizeless widget
-            } else {
-              List<Widget> ingredientsWidget = snapshot.data!.map((ingredient) {
-                return Text(ingredient.name);
-              }).toList();
-              ingredientsWidget.insert(0, Text(ingredientType.name));
-              return Column(
-                children: ingredientsWidget,
-              );
-            }
-          }));
+      widgetList.add(RecipeIngredientsWidget(
+        recipe: recipe,
+        ingredientType: ingredientType,
+      ));
     }
     return widgetList;
   }
@@ -98,7 +84,7 @@ class _RecipeSelectWidgetState extends State<RecipeSelectWidget> {
               }
             });
           }),
-      children: recipeIngredientsWidget(recipe),
+      children: ingredientsListWidget(recipe),
     ));
   }
 
@@ -136,7 +122,7 @@ class _RecipeSelectWidgetState extends State<RecipeSelectWidget> {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(
               child: Text('No recipes to display. Try adding one!'));
-          // TODO: Add button here to add a new recipe
+          // TODO: Add button here to go to add a new recipe
         } else {
           List<Recipe> allRecipes = snapshot.data!;
 
