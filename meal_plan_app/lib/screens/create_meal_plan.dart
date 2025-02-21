@@ -40,7 +40,13 @@ class _CreateMealPlanScreenState extends State<CreateMealPlanScreen> {
           Expanded(
               child: SingleChildScrollView(
                   child: RecipeSelectWidget(
-                      selectedRecipeIds: selectedRecipeIds))),
+                      selectedRecipeIds: selectedRecipeIds,
+                      onSelectedRecipeIdsChanged: (updatedList) {
+                        setState(() {
+                          selectedRecipeIds =
+                              updatedList; // Update the parent state
+                        });
+                      }))),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(

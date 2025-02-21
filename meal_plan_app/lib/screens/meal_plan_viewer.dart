@@ -98,7 +98,14 @@ class _MealPlanViewerState extends State<MealPlanViewer> {
   // Returns list of recipes in the meal plan, or form to edit meal plans
   Widget recipesWidget() {
     Widget recipeWidget = editMode
-        ? RecipeSelectWidget(selectedRecipeIds: selectedRecipeIds)
+        ? RecipeSelectWidget(
+            selectedRecipeIds: selectedRecipeIds, // Pass the list
+            onSelectedRecipeIdsChanged: (updatedList) {
+              setState(() {
+                selectedRecipeIds = updatedList; // Update the parent state
+              });
+            },
+          )
         : MealPlanRecipesWidget(mealPlan: widget.mealPlan);
 
     return recipeWidget;

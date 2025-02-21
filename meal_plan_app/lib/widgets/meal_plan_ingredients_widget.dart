@@ -20,13 +20,17 @@ class MealPlanIngredientsWidget extends StatefulWidget {
   factory MealPlanIngredientsWidget.fromExistingMealPlan(
       {Key? key, required MealPlan mealPlan}) {
     return MealPlanIngredientsWidget(
-        mealPlan: mealPlan, selectedRecipeIds: null, useExistingMealPlan: true);
+        key: key,
+        mealPlan: mealPlan,
+        selectedRecipeIds: null,
+        useExistingMealPlan: true);
   }
 
   // Use a list of recipes (tentative meal plan)
   factory MealPlanIngredientsWidget.fromSelectedRecipes(
       {Key? key, required List<int> selectedRecipeIds}) {
     return MealPlanIngredientsWidget(
+        key: key,
         mealPlan: null,
         selectedRecipeIds: selectedRecipeIds,
         useExistingMealPlan: false);
@@ -42,6 +46,11 @@ class MealPlanIngredientsWidget extends StatefulWidget {
 }
 
 class _MealPlanIngredientsWidgetState extends State<MealPlanIngredientsWidget> {
+  // Trigger a refresh manually using this method
+  void refresh() {
+    setState(() {});
+  }
+
   // Returns the colour to display recipe with based on occurrences in meal plan
   Color getOccurrencesColor(int occurrences) {
     if (occurrences > 1) {

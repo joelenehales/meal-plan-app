@@ -8,9 +8,13 @@ import 'package:meal_plan_app/widgets/recipe_ingredients_widgets.dart';
 // Helper class creates a widget that displays a list of recipes with
 // checkboxes. Selected recipes are stored in a list by their ID.
 class RecipeSelectWidget extends StatefulWidget {
-  const RecipeSelectWidget({super.key, required this.selectedRecipeIds});
+  const RecipeSelectWidget(
+      {super.key,
+      required this.selectedRecipeIds,
+      required this.onSelectedRecipeIdsChanged});
 
   final List<int> selectedRecipeIds; // Reference to external list
+  final Function(List<int>) onSelectedRecipeIdsChanged; // Callback type
 
   @override
   State<RecipeSelectWidget> createState() => _RecipeSelectWidgetState();
@@ -82,6 +86,8 @@ class _RecipeSelectWidgetState extends State<RecipeSelectWidget> {
               } else {
                 widget.selectedRecipeIds.remove(recipe.id);
               }
+              // Notify parent widget of the change
+              widget.onSelectedRecipeIdsChanged(widget.selectedRecipeIds);
             });
           }),
       children: ingredientsListWidget(recipe),
